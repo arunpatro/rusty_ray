@@ -18,16 +18,17 @@ impl Camera {
     }
 
     pub fn ray(&self, i: usize, j: usize) -> Ray {
-        let direction = self.screen_origin
+        let screen_point = self.screen_origin
             + Vector3::new(
                 i as f32 * 2. / self.image.nrows() as f32,
-                j as f32 * 2. / self.image.ncols() as f32,
+                j as f32 * 2. / self.image.ncols() as f32 * -1., // y displacement is negative
                 0., // z is always 0
-            )
-            - self.position;
-        let direction = direction.normalize();
+            );
+
+        let direction = screen_point - self.position;
         let direction = Vector3::new(0., 0., -1.);
-        Ray::new(self.position, direction)
+        let direction = direction.normalize();
+        Ray::new(screen_point, direction)
     }
 }
 
