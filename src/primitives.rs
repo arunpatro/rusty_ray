@@ -22,11 +22,11 @@ impl Camera {
             + Vector3::new(
                 i as f32 * 2. / self.image.nrows() as f32,
                 j as f32 * 2. / self.image.ncols() as f32 * -1., // y displacement is negative
-                0., // z is always 0
+                0.,                                              // z is always 0
             );
 
         let direction = screen_point - self.position;
-        let direction = Vector3::new(0., 0., -1.);
+        // let direction = Vector3::new(0., 0., -1.);
         let direction = direction.normalize();
         Ray::new(screen_point, direction)
     }
@@ -40,7 +40,6 @@ impl Light {
     pub fn new(position: Vector3<f32>) -> Self {
         Self { position }
     }
-
 }
 
 pub struct Sphere {
@@ -65,7 +64,6 @@ impl Sphere {
     }
 
     pub fn intersects(&self, ray: &Ray) -> Option<Vector3<f32>> {
-        assert!(ray.direction.norm_squared() == 1.);
         let a = ray.direction.norm_squared();
         let b = 2. * ray.direction.dot(&(ray.origin - self.center));
         let c = (ray.origin - self.center).norm_squared() - self.radius.powi(2);
