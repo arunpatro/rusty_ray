@@ -16,7 +16,7 @@ fn render_scene() {
 
     // let sphere = primitives::Sphere::new(Vector3::new(0., 0., 0.), 0.5);
     let mut camera =
-        primitives::Camera::new(Vector3::new(0., 0., 4.), Vector3::new(-15., 15., 1.), 600);
+        primitives::Camera::new(Vector3::new(0., 0., 4.), Vector3::new(-15., 15., 1.), 600, 600);
     let light = primitives::Light::new(Vector3::new(-1., 1., 1.));
 
     // render

@@ -5,23 +5,27 @@ pub struct Camera {
     screen_origin: Vector3<f32>,
     pub image: DMatrix<f32>,
     pub alpha: DMatrix<f32>,
+    width: usize,
+    height: usize,
 }
 
 impl Camera {
-    pub fn new(position: Vector3<f32>, origin: Vector3<f32>, image_size: usize) -> Self {
+    pub fn new(position: Vector3<f32>, screen_origin: Vector3<f32>, width:usize, height:usize) -> Self {
         Self {
             position: position,
-            screen_origin: origin,
-            image: DMatrix::zeros(image_size, image_size),
-            alpha: DMatrix::zeros(image_size, image_size),
+            screen_origin: screen_origin,
+            width: width,
+            height: height,
+            image: DMatrix::zeros(width, height),
+            alpha: DMatrix::zeros(width, height),
         }
     }
 
     pub fn ray(&self, i: usize, j: usize) -> Ray {
         let screen_point = self.screen_origin
             + Vector3::new(
-                i as f32 * 30. / self.image.nrows() as f32,
-                j as f32 * 30. / self.image.ncols() as f32 * -1., // y displacement is negative
+                i as f32 * 30. / self.width as f32,
+                j as f32 * 30. / self.height as f32 * -1., // y displacement is negative
                 0.,                                              // z is always 0
             );
 

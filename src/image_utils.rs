@@ -1,9 +1,10 @@
 use crate::primitives::Camera;
 
 pub fn save_as_png(camera: Camera, filename: &str) {
-    let image_size = camera.image.nrows();
+    let width = camera.image.nrows();
+    let height = camera.image.ncols();
     // convert to u8 for all channels and imgbuf to save as png
-    let mut imgbuf = image::ImageBuffer::new(image_size as u32, image_size as u32);
+    let mut imgbuf = image::ImageBuffer::new(width as u32, height as u32);
     for (x, y, pixel) in imgbuf.enumerate_pixels_mut() {
         let i = x as usize;
         let j = y as usize;
