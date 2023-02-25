@@ -2,7 +2,7 @@ mod primitives;
 use nalgebra::Vector3;
 mod image_utils;
 
-fn render_sphere_orthographic() {
+fn render_scene() {
     // setup the scene
     let objects: Vec<primitives::Sphere> = vec![
         primitives::Sphere::new(Vector3::new(10., 0., 1.), 1.),
@@ -51,38 +51,23 @@ fn render_sphere_orthographic() {
                 Some(intersection) => {
                     let normal = intersection.1;
                     let light_vector = (light.position - intersection.0).normalize();
-                    let itensity = normal.dot(&light_vector);
-                    let color = 0.3 + 0.7 * itensity; // 0.3 is ambient light
+                    let bisector_direction = (light_vector - ray.direction).normalize();
+                    let specular_intensity = normal.dot(&bisector_direction).max(0.).powf(256.);
+                    let diffuse_itensity = normal.dot(&light_vector);
+                    let color = 0.2 + 0.3 * diffuse_itensity + 0.3 * specular_intensity;
 
                     camera.image[(i, j)] = color;
                     camera.alpha[(i, j)] = 1.;
                 }
                 None => {}
             }
-
-            // let intersection = sphere.intersects(&ray);
-            // match intersection {
-            //     Some(intersection) => {
-            //         // if intersects, calculate color
-            //         let normal = sphere.normal(&intersection);
-            //         let light_vector = (light.position - intersection).normalize();
-            //         let itensity = normal.dot(&light_vector);
-
-            //         camera.image[(i, j)] = itensity;
-            //         camera.alpha[(i, j)] = 1.;
-            //         // print!(" Intersected at ({}, {}, {})", intersection.x, intersection.y, intersection.z);
-            //     }
-            //     None => {
-            //         // print!(" Failed to intersect");
-            //     }
-            // }
         }
     }
 
-    image_utils::save_as_png(camera, "sphere_perspective.png");
+    image_utils::save_as_png(camera, "scene.png");
 }
 
 fn main() {
-    println!("Hello, world!");
-    render_sphere_orthographic();
+    println!("Welcome to rusty ray tracer!");
+    render_scene();
 }

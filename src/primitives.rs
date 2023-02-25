@@ -20,13 +20,13 @@ impl Camera {
     pub fn ray(&self, i: usize, j: usize) -> Ray {
         let screen_point = self.screen_origin
             + Vector3::new(
-                i as f32 * 2. / self.image.nrows() as f32,
-                j as f32 * 2. / self.image.ncols() as f32 * -1., // y displacement is negative
+                i as f32 * 30. / self.image.nrows() as f32,
+                j as f32 * 30. / self.image.ncols() as f32 * -1., // y displacement is negative
                 0.,                                              // z is always 0
             );
 
-        let direction = screen_point - self.position;
-        // let direction = Vector3::new(0., 0., -1.);
+        // let direction = screen_point - self.position;
+        let direction = Vector3::new(0., 0., -1.);
         let direction = direction.normalize();
         Ray::new(screen_point, direction)
     }
@@ -84,3 +84,5 @@ impl Sphere {
         return normal;
     }
 }
+
+
