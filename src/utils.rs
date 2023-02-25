@@ -1,23 +1,29 @@
-// // find intersection and normal of the closest object
-// fn find_nearest_object(ray: &Ray, objects: Vec<Sphere>) -> Option<(Intersection, Normal)> {
-//     let mut closest_intersection: Option<(Intersection, Normal)> = None;
-//     for object in &objects {
-//         let intersection = object.intersects(ray);
-//         match intersection {
-//             Some(intersection) => match closest_intersection {
-//                 Some(closest_intersection) => {
-//                     if intersection.distance < closest_intersection.distance {
-//                         let normal = object.normal(&intersection);
-//                         closest_intersection = Some((intersection, normal));
-//                     }
-//                 }
-//                 None => {
-//                     let normal = object.normal(&intersection);
-//                     closest_intersection = Some((intersection, normal));
-//                 }
-//             }
-//             None => {}
-//         }
-//     }
-//     return closest_intersection;
-// }
+use crate::primitives;
+use crate::primitives::{Object, Ray};
+use nalgebra::Vector3;
+
+
+pub fn find_closest_point(ray: &Ray, objects: &Vec<primitives::Sphere>) -> (Option<usize>, Option<Vector3<f32>>) {
+    let mut closest_point: Option<Vector3<f32>> = None;
+    let mut index: Option<usize> = None;
+
+    for (i, object) in objects.iter().enumerate() {
+        if let Some(intersection) = object.intersects(&ray) {
+            match closest_point {
+                Some(old_closest_point) => {
+                    if (intersection - ray.origin).norm_squared()
+                        < (old_closest_point - ray.origin).norm_squared()
+                    {
+                        closest_point = Some(intersection);
+                        index = Some(i);
+                    }
+                }
+                None => {
+                    closest_point = Some(intersection);
+                    index = Some(i);
+                }
+            }
+        }
+    }
+    return (index, closest_point);
+}
