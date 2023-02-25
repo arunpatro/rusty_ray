@@ -10,12 +10,12 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn new(position: Vector3<f32>, screen_origin: Vector3<f32>, width:usize, height:usize) -> Self {
+    pub fn new(position: Vector3<f32>, width: usize, height: usize) -> Self {
         Self {
             position: position,
-            screen_origin: screen_origin,
             width: width,
             height: height,
+            screen_origin: Vector3::new(-15., 10., 1.),
             image: DMatrix::zeros(width, height),
             alpha: DMatrix::zeros(width, height),
         }
@@ -25,8 +25,8 @@ impl Camera {
         let screen_point = self.screen_origin
             + Vector3::new(
                 i as f32 * 30. / self.width as f32,
-                j as f32 * 30. / self.height as f32 * -1., // y displacement is negative
-                0.,                                              // z is always 0
+                j as f32 * 20. / self.height as f32 * -1., // y displacement is negative
+                0.,                                        // z is always 0
             );
 
         // let direction = screen_point - self.position;
@@ -88,5 +88,3 @@ impl Sphere {
         return normal;
     }
 }
-
-
