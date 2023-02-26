@@ -8,13 +8,13 @@ mod image_utils;
 fn render_scene() {
     // set the objects
     let objects: Vec<Box<dyn primitives::Object>> = vec![
-        // Box::new(primitives::Sphere::new(Vector3::new(10., 0., 1.), 1.)),
-        // Box::new(primitives::Sphere::new(Vector3::new(7., 0.05, -1.), 1.)),
-        // Box::new(primitives::Sphere::new(Vector3::new(4., 0.1, 1.), 1.)),
-        // Box::new(primitives::Sphere::new(Vector3::new(1., 0.2, -1.), 1.)),
-        // Box::new(primitives::Sphere::new(Vector3::new(-2., 0.4, 1.), 1.)),
-        // Box::new(primitives::Sphere::new(Vector3::new(-5., 0.8, -1.), 1.)),
-        // Box::new(primitives::Sphere::new(Vector3::new(-8., 1.6, 1.), 1.)),
+        Box::new(primitives::Sphere::new(Vector3::new(10., 0., 1.), 1.)),
+        Box::new(primitives::Sphere::new(Vector3::new(7., 0.05, -1.), 1.)),
+        Box::new(primitives::Sphere::new(Vector3::new(4., 0.1, 1.), 1.)),
+        Box::new(primitives::Sphere::new(Vector3::new(1., 0.2, -1.), 1.)),
+        Box::new(primitives::Sphere::new(Vector3::new(-2., 0.4, 1.), 1.)),
+        Box::new(primitives::Sphere::new(Vector3::new(-5., 0.8, -1.), 1.)),
+        Box::new(primitives::Sphere::new(Vector3::new(-8., 1.6, 1.), 1.)),
         Box::new(primitives::Parallelogram::new(
             Vector3::new(-100., -1.25, -100.),
             Vector3::new(100., 0., -100.),
@@ -45,14 +45,11 @@ fn render_scene() {
     ];
 
     // set the camera
-    let mut camera = primitives::Camera::new(0.7854, 5., 800, 400, Vector3::new(0., 1., 10.), primitives::CameraKind::PERSPECTIVE);
+    let mut camera = primitives::Camera::new(0.7854, 5., 1600, 800, Vector3::new(0., 1., 10.), primitives::CameraKind::PERSPECTIVE);
 
     // render
     for i in 0..camera.width {
         for j in 0..camera.height {
-            if i == 400 && j == 350 {
-                print!("");
-            }
             let ray = camera.ray(i, j);
             let color = shoot_ray(&ray, &objects, &lights, &ambient_light, &material, 5);
             camera.image[(i, j)] = color;

@@ -78,8 +78,9 @@ pub fn shoot_ray(
 
             // reflection
             if max_bounce > 0 {
-                let reflection_direction = ray.direction - 2. * normal.dot(&ray.direction) * normal;
-                let reflection_ray = Ray::new(intersection, reflection_direction);
+                let reflection_direction = (ray.direction - 2. * normal.dot(&ray.direction) * normal).normalize();
+                let adjusted_origin = intersection + 1e-5 * reflection_direction;
+                let reflection_ray = Ray::new(adjusted_origin, reflection_direction);
                 let reflection_color = shoot_ray(
                     &reflection_ray,
                     &objects,
@@ -88,6 +89,7 @@ pub fn shoot_ray(
                     &material,
                     max_bounce - 1,
                 );
+
                 total_color += material.reflection_color.component_mul(&reflection_color.xyz());
             }
 

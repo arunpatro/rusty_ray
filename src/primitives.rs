@@ -183,7 +183,8 @@ impl Object for Parallelogram {
         let uvt = asystem.lu().solve(&bystem).unwrap();
         let t = uvt[2];
 
-        if t < 0. {
+        if t < 1e-6 {
+        // if t < 0. {
             return None;
         } else {
             let point = ray.origin + t * ray.direction;
