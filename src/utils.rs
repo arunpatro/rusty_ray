@@ -36,10 +36,10 @@ pub fn is_light_visible(
     match ans {
         Some((_, p, _)) => {
             // check if the light is visible
-            if (p - light.position).norm() < (p - point).norm() {
-                return false;
-            } else {
+            if (p - point).norm() > (light.position - point).norm() {
                 return true;
+            } else {
+                return false;
             }
         }
         // no obstacle

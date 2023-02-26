@@ -16,7 +16,7 @@ impl Camera {
         let aspect_ratio = width as f32 / height as f32;
         let image_y = 2. * (fov / 2.0).tan() * focal_length;
         let image_x = image_y * aspect_ratio;
-        let screen_origin = Vector3::new(-image_x, image_y, -focal_length);
+        let screen_origin = Vector3::new(-image_x, image_y, focal_length);
         let x_displacement = Vector3::new(2.0 / width as f32 * image_x, 0., 0.);
         let y_displacement = Vector3::new(0., -2.0 / height as f32 * image_y, 0.);
 
@@ -88,8 +88,12 @@ impl Object for Sphere {
             let t1 = (-b + discriminant.sqrt()) / (2. * a);
             let t2 = (-b - discriminant.sqrt()) / (2. * a);
             let t = if t1 < t2 { t1 } else { t2 };
-            let point = ray.origin + t * ray.direction;
+            if t > 0. {
+                let point = ray.origin + t * ray.direction;
             return Some((t, point, self.normal(&point)));
+            } else {
+                return None;
+            }
         }
     }
 

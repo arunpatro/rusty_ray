@@ -49,7 +49,7 @@ fn render_scene() {
 
             let ans = find_closest_point(&ray, &objects);
             match ans {
-                Some((_, intersection, normal)) => {
+                Some((t, intersection, normal)) => {
                     let light_color = Vector3::new(1., 1., 1.) * 16.; // white light
 
                     let mut total_color = Vector3::new(0., 0., 0.);
