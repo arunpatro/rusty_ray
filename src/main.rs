@@ -1,7 +1,7 @@
 mod primitives;
-use nalgebra::{Vector3};
-mod utils;
+use nalgebra::Vector3;
 mod image_utils;
+mod utils;
 
 fn render_scene() {
     // set the objects
@@ -45,8 +45,16 @@ fn render_scene() {
     // set the scene
     let background_color = Vector3::new(0., 0.1, 0.7);
     let scene = primitives::Scene::new(objects, lights, ambient_light, background_color);
+
     // set the camera
-    let mut camera = primitives::Camera::new(0.7854, 5., 1600, 800, Vector3::new(0., 1., 10.), primitives::CameraKind::PERSPECTIVE);
+    let mut camera = primitives::Camera::new(
+        0.7854,
+        5.,
+        1600,
+        800,
+        Vector3::new(0., 1., 10.),
+        primitives::CameraKind::PERSPECTIVE,
+    );
 
     // render
     for i in 0..camera.width {
@@ -62,6 +70,5 @@ fn render_scene() {
 
 fn main() {
     println!("Welcome to rusty ray tracer!");
-
     render_scene();
 }
