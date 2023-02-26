@@ -1,8 +1,6 @@
 mod primitives;
-use nalgebra::{Vector3, Vector4};
-use primitives::{Material, Object};
+use nalgebra::{Vector3};
 mod utils;
-use utils::{find_closest_point, is_light_visible, shoot_ray};
 mod image_utils;
 
 fn render_scene() {
@@ -23,7 +21,7 @@ fn render_scene() {
     ];
 
     // set the materials
-    let material = Material::new(
+    let material = primitives::Material::new(
         Vector3::new(0.5, 0.1, 0.1),
         Vector3::new(0.5, 0.5, 0.5),
         Vector3::new(0.2, 0.2, 0.2),
@@ -44,6 +42,9 @@ fn render_scene() {
         primitives::Light::new(Vector3::new(-4., 8., 0.), Vector3::new(16., 16., 16.)),
     ];
 
+    // set the scene
+    let background_color = Vector3::new(0., 0.1, 0.7);
+    let scene = primitives::Scene::new(objects, lights, ambient_light, background_color);
     // set the camera
     let mut camera = primitives::Camera::new(0.7854, 5., 1600, 800, Vector3::new(0., 1., 10.), primitives::CameraKind::PERSPECTIVE);
 
@@ -51,7 +52,7 @@ fn render_scene() {
     for i in 0..camera.width {
         for j in 0..camera.height {
             let ray = camera.ray(i, j);
-            let color = shoot_ray(&ray, &objects, &lights, &ambient_light, &material, 5);
+            let color = utils::shoot_ray(&ray, &scene, &material, 5);
             camera.image[(i, j)] = color;
         }
     }

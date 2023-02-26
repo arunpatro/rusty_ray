@@ -1,4 +1,4 @@
-use crate::primitives;
+use crate::primitives::{self, Scene};
 use crate::primitives::{Ray};
 use nalgebra::{Vector3, Vector4};
 
@@ -49,20 +49,18 @@ pub fn is_light_visible(
 
 pub fn shoot_ray(
     ray: &Ray,
-    objects: &Vec<Box<dyn primitives::Object>>,
-    lights: &Vec<primitives::Light>,
-    ambient_light: &Vector3<f32>,
+    scene: &Scene,
     material: &primitives::Material,
     max_bounce: usize,
 ) -> Vector4<f32> {
-    let ans = find_closest_point(&ray, &objects);
+    let ans = find_closest_point(&ray, &scene.objects);
     match ans {
         Some((_, intersection, normal)) => {
-            let ambient_color = material.ambient_color.component_mul(&ambient_light);
+            let ambient_color = material.ambient_color.component_mul(&scene.ambient_light);
 
             let mut total_color = Vector3::new(0., 0., 0.);
-            for light in lights {
-                if is_light_visible(&light, &intersection, &objects) {
+            for light in &scene.lights {
+                if is_light_visible(&light, &intersection, &scene.objects) {
                     let light_vector = (light.position - intersection).normalize();
                     let bisector_direction = (light_vector - ray.direction).normalize();
                     let diffuse_coeff = normal.dot(&light_vector).max(0.);
@@ -83,9 +81,7 @@ pub fn shoot_ray(
                 let reflection_ray = Ray::new(adjusted_origin, reflection_direction);
                 let reflection_color = shoot_ray(
                     &reflection_ray,
-                    &objects,
-                    &lights,
-                    &ambient_light,
+                    &scene,
                     &material,
                     max_bounce - 1,
                 );

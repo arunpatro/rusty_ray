@@ -19,7 +19,14 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn new(fov: f32, focal_length: f32, width: usize, height: usize, position: Vector3<f32>, kind: CameraKind) -> Self {
+    pub fn new(
+        fov: f32,
+        focal_length: f32,
+        width: usize,
+        height: usize,
+        position: Vector3<f32>,
+        kind: CameraKind,
+    ) -> Self {
         let aspect_ratio = width as f32 / height as f32;
         let image_y = 2. * (fov / 2.0).tan() * focal_length;
         let image_x = image_y * aspect_ratio;
@@ -46,7 +53,6 @@ impl Camera {
             + (i as f32 + 0.5) * self.x_displacement
             + (j as f32 + 0.5) * self.y_displacement;
 
-        
         match self.kind {
             CameraKind::ORTHOGRAPHIC => {
                 let origin = self.position + Vector3::new(screen_point.x, screen_point.y, 0.);
@@ -109,7 +115,7 @@ impl Object for Sphere {
             let t = if t1 < t2 { t1 } else { t2 };
             if t > 0. {
                 let point = ray.origin + t * ray.direction;
-            return Some((t, point, self.normal(&point)));
+                return Some((t, point, self.normal(&point)));
             } else {
                 return None;
             }
@@ -184,7 +190,7 @@ impl Object for Parallelogram {
         let t = uvt[2];
 
         if t < 1e-6 {
-        // if t < 0. {
+            // if t < 0. {
             return None;
         } else {
             let point = ray.origin + t * ray.direction;
@@ -197,7 +203,32 @@ impl Object for Parallelogram {
     }
 
     fn normal(&self, point: &Vector3<f32>) -> Vector3<f32> {
-        let normal = (self.point2 - self.point1).cross(&(self.point3 - self.point1)).normalize();
+        let normal = (self.point2 - self.point1)
+            .cross(&(self.point3 - self.point1))
+            .normalize();
         return normal;
+    }
+}
+
+pub struct Scene {
+    pub objects: Vec<Box<dyn Object>>,
+    pub lights: Vec<Light>,
+    pub ambient_light: Vector3<f32>,
+    pub background_color: Vector3<f32>,
+}
+
+impl Scene {
+    pub fn new(
+        objects: Vec<Box<dyn Object>>,
+        lights: Vec<Light>,
+        ambient_light: Vector3<f32>,
+        background_color: Vector3<f32>,
+    ) -> Self {
+        Self {
+            objects,
+            lights,
+            ambient_light,
+            background_color,
+        }
     }
 }
