@@ -2,19 +2,24 @@ mod primitives;
 use nalgebra::{Vector3, Vector4};
 use primitives::{Material, Object};
 mod utils;
-use utils::{find_closest_point, is_light_visible};
+use utils::{find_closest_point, is_light_visible, shoot_ray};
 mod image_utils;
 
 fn render_scene() {
     // set the objects
-    let objects: Vec<primitives::Sphere> = vec![
-        primitives::Sphere::new(Vector3::new(10., 0., 1.), 1.),
-        primitives::Sphere::new(Vector3::new(7., 0.05, -1.), 1.),
-        primitives::Sphere::new(Vector3::new(4., 0.1, 1.), 1.),
-        primitives::Sphere::new(Vector3::new(1., 0.2, -1.), 1.),
-        primitives::Sphere::new(Vector3::new(-2., 0.4, 1.), 1.),
-        primitives::Sphere::new(Vector3::new(-5., 0.8, -1.), 1.),
-        primitives::Sphere::new(Vector3::new(-8., 1.6, 1.), 1.),
+    let objects: Vec<Box<dyn primitives::Object>> = vec![
+        // Box::new(primitives::Sphere::new(Vector3::new(10., 0., 1.), 1.)),
+        // Box::new(primitives::Sphere::new(Vector3::new(7., 0.05, -1.), 1.)),
+        // Box::new(primitives::Sphere::new(Vector3::new(4., 0.1, 1.), 1.)),
+        // Box::new(primitives::Sphere::new(Vector3::new(1., 0.2, -1.), 1.)),
+        // Box::new(primitives::Sphere::new(Vector3::new(-2., 0.4, 1.), 1.)),
+        // Box::new(primitives::Sphere::new(Vector3::new(-5., 0.8, -1.), 1.)),
+        // Box::new(primitives::Sphere::new(Vector3::new(-8., 1.6, 1.), 1.)),
+        Box::new(primitives::Parallelogram::new(
+            Vector3::new(-100., -1.25, -100.),
+            Vector3::new(100., 0., -100.),
+            Vector3::new(-100., -1.2, 100.),
+        )),
     ];
 
     // set the materials
@@ -30,52 +35,26 @@ fn render_scene() {
     // set the lights
     let ambient_light = Vector3::new(0.2, 0.2, 0.2);
     let lights: Vec<primitives::Light> = vec![
-        primitives::Light::new(Vector3::new(8., 8., 0.)),
-        primitives::Light::new(Vector3::new(6., -8., 0.)),
-        primitives::Light::new(Vector3::new(4., 8., 0.)),
-        primitives::Light::new(Vector3::new(2., -8., 0.)),
-        primitives::Light::new(Vector3::new(0., 8., 0.)),
-        primitives::Light::new(Vector3::new(-2., -8., 0.)),
-        primitives::Light::new(Vector3::new(-4., 8., 0.)),
+        primitives::Light::new(Vector3::new(8., 8., 0.), Vector3::new(16., 16., 16.)),
+        primitives::Light::new(Vector3::new(6., -8., 0.), Vector3::new(16., 16., 16.)),
+        primitives::Light::new(Vector3::new(4., 8., 0.), Vector3::new(16., 16., 16.)),
+        primitives::Light::new(Vector3::new(2., -8., 0.), Vector3::new(16., 16., 16.)),
+        primitives::Light::new(Vector3::new(0., 8., 0.), Vector3::new(16., 16., 16.)),
+        primitives::Light::new(Vector3::new(-2., -8., 0.), Vector3::new(16., 16., 16.)),
+        primitives::Light::new(Vector3::new(-4., 8., 0.), Vector3::new(16., 16., 16.)),
     ];
 
     // set the camera
-    let mut camera = primitives::Camera::new(0.7854, 5., 800, 400);
+    let mut camera = primitives::Camera::new(0.7854, 5., 800, 400, Vector3::new(0., 0., 10.), primitives::CameraKind::ORTHOGRAPHIC);
 
     // render
     for i in 0..camera.width {
         for j in 0..camera.height {
             let ray = camera.ray(i, j);
-
-            let ans = find_closest_point(&ray, &objects);
-            match ans {
-                Some((t, intersection, normal)) => {
-                    let light_color = Vector3::new(1., 1., 1.) * 16.; // white light
-
-                    let mut total_color = Vector3::new(0., 0., 0.);
-                    for light in &lights {
-                        let light_vector = (light.position - intersection).normalize();
-
-                        // check if light visible
-                        if is_light_visible(&light, &intersection, &objects) {
-                            let bisector_direction = (light_vector - ray.direction).normalize();
-                            let diffuse_coeff = normal.dot(&light_vector).max(0.);
-                            let specular_coeff = normal.dot(&bisector_direction).max(0.).powf(256.);
-
-                            let diffuse = diffuse_coeff * material.diffuse_color;
-                            let specular = specular_coeff * material.specular_color;
-
-                            let d_light_squared = (light.position - intersection).norm_squared();
-                            total_color +=
-                                light_color.component_mul(&(diffuse + specular)) / d_light_squared;
-                        }
-                    }
-
-                    let ambient_color = material.ambient_color.component_mul(&ambient_light);
-                    let color = ambient_color + total_color;
-                    camera.image[(i, j)] = Vector4::new(color.x, color.y, color.z, 1.);
-                }
-                None => {}
+            let color = shoot_ray(&ray, &objects, &lights, &ambient_light, &material, 5);
+            camera.image[(i, j)] = color;
+            if i == 400 && j == 350 {
+                println!("color: {:?}", color);
             }
         }
     }

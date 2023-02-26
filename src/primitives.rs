@@ -1,4 +1,9 @@
-use nalgebra::{DMatrix, Vector3, Vector4};
+use nalgebra::{DMatrix, Matrix3, Vector3, Vector4};
+
+pub enum CameraKind {
+    ORTHOGRAPHIC,
+    PERSPECTIVE,
+}
 
 pub struct Camera {
     pub fov: f32,
@@ -6,17 +11,19 @@ pub struct Camera {
     pub width: usize,
     pub height: usize,
     pub image: DMatrix<Vector4<f32>>,
+    pub position: Vector3<f32>,
+    pub kind: CameraKind,
     screen_origin: Vector3<f32>,
     x_displacement: Vector3<f32>,
     y_displacement: Vector3<f32>,
 }
 
 impl Camera {
-    pub fn new(fov: f32, focal_length: f32, width: usize, height: usize) -> Self {
+    pub fn new(fov: f32, focal_length: f32, width: usize, height: usize, position: Vector3<f32>, kind: CameraKind) -> Self {
         let aspect_ratio = width as f32 / height as f32;
         let image_y = 2. * (fov / 2.0).tan() * focal_length;
         let image_x = image_y * aspect_ratio;
-        let screen_origin = Vector3::new(-image_x, image_y, focal_length);
+        let screen_origin = Vector3::new(-image_x, image_y, position.z - focal_length);
         let x_displacement = Vector3::new(2.0 / width as f32 * image_x, 0., 0.);
         let y_displacement = Vector3::new(0., -2.0 / height as f32 * image_y, 0.);
 
@@ -29,6 +36,8 @@ impl Camera {
             y_displacement: y_displacement,
             screen_origin: screen_origin,
             image: DMatrix::from_element(width, height, Vector4::zeros()),
+            position: position,
+            kind: kind,
         }
     }
 
@@ -37,20 +46,30 @@ impl Camera {
             + (i as f32 + 0.5) * self.x_displacement
             + (j as f32 + 0.5) * self.y_displacement;
 
-        // let direction = screen_point - self.position;
-        let direction = Vector3::new(0., 0., -1.);
-        let direction = direction.normalize();
-        Ray::new(screen_point, direction)
+        
+        match self.kind {
+            CameraKind::ORTHOGRAPHIC => {
+                let origin = self.position + Vector3::new(screen_point.x, screen_point.y, 0.);
+                let direction = Vector3::new(0., 0., -1.);
+                return Ray::new(origin, direction);
+            }
+            CameraKind::PERSPECTIVE => {
+                let origin = self.position;
+                let direction = (screen_point - self.position).normalize();
+                return Ray::new(origin, direction);
+            }
+        }
     }
 }
 
 pub struct Light {
     pub position: Vector3<f32>,
+    pub color: Vector3<f32>,
 }
 
 impl Light {
-    pub fn new(position: Vector3<f32>) -> Self {
-        Self { position }
+    pub fn new(position: Vector3<f32>, color: Vector3<f32>) -> Self {
+        Self { position, color }
     }
 }
 
@@ -137,56 +156,47 @@ impl Material {
     }
 }
 
-// pub struct Parallelogram {
-//     pub point1: Vector3<f32>,
-//     pub point2: Vector3<f32>,
-//     pub point3: Vector3<f32>,
-// }
+pub struct Parallelogram {
+    pub point1: Vector3<f32>,
+    pub point2: Vector3<f32>,
+    pub point3: Vector3<f32>,
+}
 
-// impl Parallelogram {
-//     pub fn new(point1: Vector3<f32>, point2: Vector3<f32>, point3: Vector3<f32>) -> Self {
-//         Self {
-//             point1,
-//             point2,
-//             point3,
-//         }
-//     }
-// }
+impl Parallelogram {
+    pub fn new(point1: Vector3<f32>, point2: Vector3<f32>, point3: Vector3<f32>) -> Self {
+        Self {
+            point1,
+            point2,
+            point3,
+        }
+    }
+}
 
-// impl Object for Parallelogram {
-//     fn intersects(&self, ray: &Ray) -> Option<f32> {
-//         let normal = (self.point2 - self.point1).cross(&(self.point3 - self.point1));
-//         let d = normal.dot(&self.point1);
-//         let t = (d - normal.dot(&ray.origin)) / normal.dot(&ray.direction);
+impl Object for Parallelogram {
+    fn intersects(&self, ray: &Ray) -> Option<(f32, Vector3<f32>, Vector3<f32>)> {
+        let bystem = self.point1 - ray.origin;
+        let asystem = Matrix3::from_columns(&[
+            self.point1 - self.point2,
+            self.point1 - self.point3,
+            ray.direction,
+        ]);
+        let uvt = asystem.lu().solve(&bystem).unwrap();
+        let t = uvt[2];
 
-//         if t < 0. {
-//             return None;
-//         }
+        if t < 0. {
+            return None;
+        } else {
+            let point = ray.origin + t * ray.direction;
+            let mut normal = self.normal(&point);
+            if normal.dot(&ray.direction) > 0. {
+                normal = -normal;
+            }
+            return Some((t, point, normal));
+        }
+    }
 
-//         let point = ray.origin + t * ray.direction;
-//         let v0 = self.point3 - self.point1;
-//         let v1 = self.point2 - self.point1;
-//         let v2 = point - self.point1;
-
-//         let dot00 = v0.dot(&v0);
-//         let dot01 = v0.dot(&v1);
-//         let dot02 = v0.dot(&v2);
-//         let dot11 = v1.dot(&v1);
-//         let dot12 = v1.dot(&v2);
-
-//         let inv_denom = 1. / (dot00 * dot11 - dot01 * dot01);
-//         let u = (dot11 * dot02 - dot01 * dot12) * inv_denom;
-//         let v = (dot00 * dot12 - dot01 * dot02) * inv_denom;
-
-//         if u < 0. || v < 0. || u + v > 1. {
-//             return None;
-//         }
-
-//         return Some(t);
-//     }
-
-//     fn normal(&self, point: &Vector3<f32>) -> Vector3<f32> {
-//         let normal = (self.point2 - self.point1).cross(&(self.point3 - self.point1));
-//         return normal.normalize();
-//     }
-// }
+    fn normal(&self, point: &Vector3<f32>) -> Vector3<f32> {
+        let normal = (self.point2 - self.point1).cross(&(self.point3 - self.point1)).normalize();
+        return normal;
+    }
+}
