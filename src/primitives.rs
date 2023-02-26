@@ -76,7 +76,7 @@ impl Sphere {
 }
 
 impl Object for Sphere {
-    fn intersects(&self, ray: &Ray) -> Option<Vector3<f32>> {
+    fn intersects(&self, ray: &Ray) -> Option<(f32, Vector3<f32>, Vector3<f32>)> {
         let a = ray.direction.norm_squared();
         let b = 2. * ray.direction.dot(&(ray.origin - self.center));
         let c = (ray.origin - self.center).norm_squared() - self.radius.powi(2);
@@ -88,7 +88,8 @@ impl Object for Sphere {
             let t1 = (-b + discriminant.sqrt()) / (2. * a);
             let t2 = (-b - discriminant.sqrt()) / (2. * a);
             let t = if t1 < t2 { t1 } else { t2 };
-            return Some(ray.origin + t * ray.direction);
+            let point = ray.origin + t * ray.direction;
+            return Some((t, point, self.normal(&point)));
         }
     }
 
@@ -99,7 +100,7 @@ impl Object for Sphere {
 }
 
 pub trait Object {
-    fn intersects(&self, ray: &Ray) -> Option<Vector3<f32>>;
+    fn intersects(&self, ray: &Ray) -> Option<(f32, Vector3<f32>, Vector3<f32>)>;
     fn normal(&self, point: &Vector3<f32>) -> Vector3<f32>;
 }
 
@@ -132,56 +133,56 @@ impl Material {
     }
 }
 
-pub struct Parallelogram {
-    pub point1: Vector3<f32>,
-    pub point2: Vector3<f32>,
-    pub point3: Vector3<f32>,
-}
+// pub struct Parallelogram {
+//     pub point1: Vector3<f32>,
+//     pub point2: Vector3<f32>,
+//     pub point3: Vector3<f32>,
+// }
 
-impl Parallelogram {
-    pub fn new(point1: Vector3<f32>, point2: Vector3<f32>, point3: Vector3<f32>) -> Self {
-        Self {
-            point1,
-            point2,
-            point3,
-        }
-    }
-}
+// impl Parallelogram {
+//     pub fn new(point1: Vector3<f32>, point2: Vector3<f32>, point3: Vector3<f32>) -> Self {
+//         Self {
+//             point1,
+//             point2,
+//             point3,
+//         }
+//     }
+// }
 
-impl Object for Parallelogram {
-    fn intersects(&self, ray: &Ray) -> Option<Vector3<f32>> {
-        let normal = (self.point2 - self.point1).cross(&(self.point3 - self.point1));
-        let d = normal.dot(&self.point1);
-        let t = (d - normal.dot(&ray.origin)) / normal.dot(&ray.direction);
+// impl Object for Parallelogram {
+//     fn intersects(&self, ray: &Ray) -> Option<f32> {
+//         let normal = (self.point2 - self.point1).cross(&(self.point3 - self.point1));
+//         let d = normal.dot(&self.point1);
+//         let t = (d - normal.dot(&ray.origin)) / normal.dot(&ray.direction);
 
-        if t < 0. {
-            return None;
-        }
+//         if t < 0. {
+//             return None;
+//         }
 
-        let point = ray.origin + t * ray.direction;
-        let v0 = self.point3 - self.point1;
-        let v1 = self.point2 - self.point1;
-        let v2 = point - self.point1;
+//         let point = ray.origin + t * ray.direction;
+//         let v0 = self.point3 - self.point1;
+//         let v1 = self.point2 - self.point1;
+//         let v2 = point - self.point1;
 
-        let dot00 = v0.dot(&v0);
-        let dot01 = v0.dot(&v1);
-        let dot02 = v0.dot(&v2);
-        let dot11 = v1.dot(&v1);
-        let dot12 = v1.dot(&v2);
+//         let dot00 = v0.dot(&v0);
+//         let dot01 = v0.dot(&v1);
+//         let dot02 = v0.dot(&v2);
+//         let dot11 = v1.dot(&v1);
+//         let dot12 = v1.dot(&v2);
 
-        let inv_denom = 1. / (dot00 * dot11 - dot01 * dot01);
-        let u = (dot11 * dot02 - dot01 * dot12) * inv_denom;
-        let v = (dot00 * dot12 - dot01 * dot02) * inv_denom;
+//         let inv_denom = 1. / (dot00 * dot11 - dot01 * dot01);
+//         let u = (dot11 * dot02 - dot01 * dot12) * inv_denom;
+//         let v = (dot00 * dot12 - dot01 * dot02) * inv_denom;
 
-        if u < 0. || v < 0. || u + v > 1. {
-            return None;
-        }
+//         if u < 0. || v < 0. || u + v > 1. {
+//             return None;
+//         }
 
-        return Some(point);
-    }
+//         return Some(t);
+//     }
 
-    fn normal(&self, point: &Vector3<f32>) -> Vector3<f32> {
-        let normal = (self.point2 - self.point1).cross(&(self.point3 - self.point1));
-        return normal.normalize();
-    }
-}
+//     fn normal(&self, point: &Vector3<f32>) -> Vector3<f32> {
+//         let normal = (self.point2 - self.point1).cross(&(self.point3 - self.point1));
+//         return normal.normalize();
+//     }
+// }

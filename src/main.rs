@@ -40,39 +40,35 @@ fn render_scene() {
     ];
 
     // set the camera
-    let mut camera = primitives::Camera::new(0.7854, 5., 1600, 800);
+    let mut camera = primitives::Camera::new(0.7854, 5., 800, 400);
 
     // render
     for i in 0..camera.width {
         for j in 0..camera.height {
             let ray = camera.ray(i, j);
 
-            let closest_point = find_closest_point(&ray, &objects);
-            match closest_point.0 {
-                Some(index) => {
-                    let intersection = objects[index].intersects(&ray).unwrap();
-                    let normal = objects[index].normal(&intersection);
+            let ans = find_closest_point(&ray, &objects);
+            match ans {
+                Some((_, intersection, normal)) => {
                     let light_color = Vector3::new(1., 1., 1.) * 16.; // white light
 
                     let mut total_color = Vector3::new(0., 0., 0.);
                     for light in &lights {
                         let light_vector = (light.position - intersection).normalize();
 
-                        // check if the light is visible
+                        // check if light visible
                         if is_light_visible(&light, &intersection, &objects) {
-                            continue;
+                            let bisector_direction = (light_vector - ray.direction).normalize();
+                            let diffuse_coeff = normal.dot(&light_vector).max(0.);
+                            let specular_coeff = normal.dot(&bisector_direction).max(0.).powf(256.);
+
+                            let diffuse = diffuse_coeff * material.diffuse_color;
+                            let specular = specular_coeff * material.specular_color;
+
+                            let d_light_squared = (light.position - intersection).norm_squared();
+                            total_color +=
+                                light_color.component_mul(&(diffuse + specular)) / d_light_squared;
                         }
-
-                        let bisector_direction = (light_vector - ray.direction).normalize();
-                        let diffuse_coeff = normal.dot(&light_vector).max(0.);
-                        let specular_coeff = normal.dot(&bisector_direction).max(0.).powf(256.);
-
-                        let diffuse = diffuse_coeff * material.diffuse_color;
-                        let specular = specular_coeff * material.specular_color;
-
-                        let d_light_squared = (light.position - intersection).norm_squared();
-                        total_color +=
-                            light_color.component_mul(&(diffuse + specular)) / d_light_squared;
                     }
 
                     let ambient_color = material.ambient_color.component_mul(&ambient_light);

@@ -5,50 +5,44 @@ use nalgebra::Vector3;
 pub fn find_closest_point(
     ray: &Ray,
     objects: &Vec<primitives::Sphere>,
-) -> (Option<usize>, Option<Vector3<f32>>) {
-    let mut closest_point: Option<Vector3<f32>> = None;
-    let mut index: Option<usize> = None;
+) -> Option<(f32, Vector3<f32>, Vector3<f32>)> {
+    let mut closest_point: Option<(f32, Vector3<f32>, Vector3<f32>)> = None;
 
-    for (i, object) in objects.iter().enumerate() {
-        if let Some(intersection) = object.intersects(&ray) {
+    for object in objects {
+        if let Some((t, p, n)) = object.intersects(&ray) {
             match closest_point {
-                Some(old_closest_point) => {
-                    if (intersection - ray.origin).norm_squared()
-                        < (old_closest_point - ray.origin).norm_squared()
-                    {
-                        closest_point = Some(intersection);
-                        index = Some(i);
+                Some((old_t, _, _)) => {
+                    if t < old_t {
+                        closest_point = Some((t, p, n));
                     }
                 }
                 None => {
-                    closest_point = Some(intersection);
-                    index = Some(i);
+                    closest_point = Some((t, p, n));
                 }
             }
         }
     }
-    return (index, closest_point);
+    return closest_point;
 }
 
 // check if the light is visible
 pub fn is_light_visible(
     light: &primitives::Light,
-    closest_point: &Vector3<f32>,
+    point: &Vector3<f32>,
     objects: &Vec<primitives::Sphere>,
 ) -> bool {
-    let light_ray = Ray::new(*closest_point, light.position - closest_point);
-    let (_, point) = find_closest_point(&light_ray, objects);
-    match point {
-        Some(point) => {
-            if (point - closest_point).norm_squared()
-                < (light.position - closest_point).norm_squared()
-            {
+    let light_ray = Ray::new(*point, (light.position - point).normalize());
+    let ans = find_closest_point(&light_ray, objects);
+    match ans {
+        Some((_, p, _)) => {
+            // check if the light is visible
+            if (p - light.position).norm() < (p - point).norm() {
                 return false;
             } else {
                 return true;
             }
         }
+        // no obstacle
         None => return true,
     }
 }
-    
