@@ -45,17 +45,17 @@ fn render_scene() {
     ];
 
     // set the camera
-    let mut camera = primitives::Camera::new(0.7854, 5., 800, 400, Vector3::new(0., 0., 10.), primitives::CameraKind::ORTHOGRAPHIC);
+    let mut camera = primitives::Camera::new(0.7854, 5., 800, 400, Vector3::new(0., 1., 10.), primitives::CameraKind::PERSPECTIVE);
 
     // render
     for i in 0..camera.width {
         for j in 0..camera.height {
+            if i == 400 && j == 350 {
+                print!("");
+            }
             let ray = camera.ray(i, j);
             let color = shoot_ray(&ray, &objects, &lights, &ambient_light, &material, 5);
             camera.image[(i, j)] = color;
-            if i == 400 && j == 350 {
-                println!("color: {:?}", color);
-            }
         }
     }
 
