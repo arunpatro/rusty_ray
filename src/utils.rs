@@ -5,19 +5,19 @@ use nalgebra::{Vector3, Vector4};
 pub fn find_closest_point(
     ray: &Ray,
     objects: &Vec<Box<dyn primitives::Object>>,
-) -> Option<(f32, Vector3<f32>, Vector3<f32>)> {
-    let mut closest_point: Option<(f32, Vector3<f32>, Vector3<f32>)> = None;
+) -> Option<(usize, f32, Vector3<f32>, Vector3<f32>)> {
+    let mut closest_point = None;
 
-    for object in objects {
+    for (index, object) in objects.iter().enumerate() {
         if let Some((t, p, n)) = object.intersects(&ray) {
             match closest_point {
-                Some((old_t, _, _)) => {
+                Some((_, old_t, _, _)) => {
                     if t < old_t {
-                        closest_point = Some((t, p, n));
+                        closest_point = Some((index, t, p, n));
                     }
                 }
                 None => {
-                    closest_point = Some((t, p, n));
+                    closest_point = Some((index, t, p, n));
                 }
             }
         }
@@ -34,7 +34,7 @@ pub fn is_light_visible(
     let light_ray = Ray::new(*point, (light.position - point).normalize());
     let ans = find_closest_point(&light_ray, objects);
     match ans {
-        Some((_, p, _)) => {
+        Some((_, _, p, _)) => {
             // check if the light is visible
             if (p - point).norm() > (light.position - point).norm() {
                 return true;
@@ -55,7 +55,7 @@ pub fn shoot_ray(
 ) -> Vector4<f32> {
     let ans = find_closest_point(&ray, &scene.objects);
     match ans {
-        Some((_, intersection, normal)) => {
+        Some((_, _, intersection, normal)) => {
             let ambient_color = material.ambient_color.component_mul(&scene.ambient_light);
 
             let mut total_color = Vector3::new(0., 0., 0.);

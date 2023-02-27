@@ -10,3 +10,6 @@ here are some notes about doing this in rust and comparing a similar implementat
     - ideally this t_value should be 0. or rather this point of intersection should not be considered as it is the same plane, the right way to handle it would be to send a ray epsilon away from the point
     - this is somewhat equivalent to having that t_value > epsilon to be considered a interaction (???)
     - similar error happens and creates artifacts when we try to calculate the reflected ray, we need to keep it epsilon away from the surface
+
+### Using Vulcan via Volcano
+- We also study optimizing the graphics pipeline using the vulcan api. We use the [volcano]. 

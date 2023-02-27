@@ -10,4 +10,4 @@ nalgebra = "0.32.1"
 image = "0.24.5"
 
 [profile.release]
-lto = true
+debug = true

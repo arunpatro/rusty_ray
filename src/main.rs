@@ -50,8 +50,8 @@ fn render_scene() {
     let mut camera = primitives::Camera::new(
         0.7854,
         5.,
+        2400,
         1600,
-        800,
         Vector3::new(0., 1., 10.),
         primitives::CameraKind::PERSPECTIVE,
     );
