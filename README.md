@@ -1,6 +1,9 @@
 # rusty_ray
 ray tracing in rust
 
+## TODO
+- add procedural texture [failing]
+
 ## notes
 here are some notes about doing this in rust and comparing a similar implementation in cpp
 

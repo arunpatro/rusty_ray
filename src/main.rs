@@ -2,6 +2,7 @@ mod primitives;
 use nalgebra::Vector3;
 mod image_utils;
 mod utils;
+mod textures;
 
 fn render_scene() {
     // set the objects

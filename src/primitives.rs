@@ -91,7 +91,7 @@ impl Ray {
 }
 pub struct Sphere {
     pub center: Vector3<f32>,
-    radius: f32,
+    pub radius: f32,
 }
 
 impl Sphere {
