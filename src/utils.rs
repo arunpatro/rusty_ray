@@ -68,9 +68,9 @@ pub fn shoot_ray(
                     // procedural texture
                     if index == 4 {
                             // Compute UV coodinates for the point on the sphere
-                            let xyz = intersection - Vector3::new(-2., 0.4, 1.);
-                            let tu = (xyz.z / 1. ).acos() / std::f32::consts::PI;
-                            let tv = (std::f32::consts::PI + xyz.y.atan2(xyz.x)) / (2. * std::f32::consts::PI);
+                            // let xyz = intersection - Vector3::new(-2., 0.4, 1.);
+                            // let tu = (xyz.z / 1. ).acos() / std::f32::consts::PI;
+                            // let tv = (std::f32::consts::PI + xyz.y.atan2(xyz.x)) / (2. * std::f32::consts::PI);
                             // diffuse_color = procedural_texture(tu, tv);
                     }
 
