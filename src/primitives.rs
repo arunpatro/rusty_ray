@@ -35,16 +35,16 @@ impl Camera {
         let y_displacement = Vector3::new(0., -2.0 / height as f32 * image_y, 0.);
 
         Self {
-            fov: fov,
-            focal_length: focal_length,
-            width: width,
-            height: height,
-            x_displacement: x_displacement,
-            y_displacement: y_displacement,
-            screen_origin: screen_origin,
+            fov,
+            focal_length,
+            width,
+            height,
+            x_displacement,
+            y_displacement,
+            screen_origin,
             image: DMatrix::from_element(width, height, Vector4::zeros()),
-            position: position,
-            kind: kind,
+            position,
+            kind,
         }
     }
 
@@ -57,12 +57,12 @@ impl Camera {
             CameraKind::ORTHOGRAPHIC => {
                 let origin = self.position + Vector3::new(screen_point.x, screen_point.y, 0.);
                 let direction = Vector3::new(0., 0., -1.);
-                return Ray::new(origin, direction);
+                Ray::new(origin, direction)
             }
             CameraKind::PERSPECTIVE => {
                 let origin = self.position;
                 let direction = (screen_point - self.position).normalize();
-                return Ray::new(origin, direction);
+                Ray::new(origin, direction)
             }
         }
     }
@@ -108,23 +108,23 @@ impl Object for Sphere {
         let discriminant = b.powi(2) - 4. * a * c;
 
         if discriminant < 0. {
-            return None;
+            None
         } else {
             let t1 = (-b + discriminant.sqrt()) / (2. * a);
             let t2 = (-b - discriminant.sqrt()) / (2. * a);
             let t = if t1 < t2 { t1 } else { t2 };
             if t > 0. {
                 let point = ray.origin + t * ray.direction;
-                return Some((t, point, self.normal(&point)));
+                Some((t, point, self.normal(&point)))
             } else {
-                return None;
+                None
             }
         }
     }
 
     fn normal(&self, point: &Vector3<f32>) -> Vector3<f32> {
-        let normal = (point - self.center).normalize();
-        return normal;
+        
+        (point - self.center).normalize()
     }
 }
 
@@ -191,22 +191,22 @@ impl Object for Parallelogram {
 
         if t < 1e-6 {
             // if t < 0. {
-            return None;
+            None
         } else {
             let point = ray.origin + t * ray.direction;
             let mut normal = self.normal(&point);
             if normal.dot(&ray.direction) > 0. {
                 normal = -normal;
             }
-            return Some((t, point, normal));
+            Some((t, point, normal))
         }
     }
 
-    fn normal(&self, point: &Vector3<f32>) -> Vector3<f32> {
-        let normal = (self.point2 - self.point1)
+    fn normal(&self, _point: &Vector3<f32>) -> Vector3<f32> {
+        
+        (self.point2 - self.point1)
             .cross(&(self.point3 - self.point1))
-            .normalize();
-        return normal;
+            .normalize()
     }
 }
 

@@ -38,9 +38,9 @@ fn perlin(x: f64, y: f64, grid: &[[Vector2<f64>; 4]; 4]) -> f64 {
     let n1 = dot_grid_gradient(x1, y1, x, y, grid);
 
     let ix1 = lerp(n0, n1, sx);
-    let value = lerp(ix0, ix1, sy);
+    
 
-    value
+    lerp(ix0, ix1, sy)
 }
 
 pub fn procedural_texture(tu: f32, tv: f32) -> Vector3<f32> {
