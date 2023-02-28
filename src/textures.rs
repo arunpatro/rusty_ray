@@ -38,7 +38,6 @@ fn perlin(x: f64, y: f64, grid: &[[Vector2<f64>; 4]; 4]) -> f64 {
     let n1 = dot_grid_gradient(x1, y1, x, y, grid);
 
     let ix1 = lerp(n0, n1, sx);
-    
 
     lerp(ix0, ix1, sy)
 }
@@ -56,6 +55,7 @@ pub fn procedural_texture(tu: f32, tv: f32) -> Vector3<f32> {
     // Vector4::new(0.0, color, 0.0, 0.0)
 
     // Example for checkerboard texture
-    let color = (tu * grid_size as f32).floor() as i32 + (tv * grid_size as f32).floor() as i32 % 2 == 0;
+    let color =
+        (tu * grid_size as f32).floor() as i32 + (tv * grid_size as f32).floor() as i32 % 2 == 0;
     Vector3::new(0.0, color as i32 as f32, 0.0)
 }

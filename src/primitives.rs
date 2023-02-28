@@ -123,7 +123,6 @@ impl Object for Sphere {
     }
 
     fn normal(&self, point: &Vector3<f32>) -> Vector3<f32> {
-        
         (point - self.center).normalize()
     }
 }
@@ -203,7 +202,6 @@ impl Object for Parallelogram {
     }
 
     fn normal(&self, _point: &Vector3<f32>) -> Vector3<f32> {
-        
         (self.point2 - self.point1)
             .cross(&(self.point3 - self.point1))
             .normalize()

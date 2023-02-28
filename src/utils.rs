@@ -1,7 +1,6 @@
+use crate::primitives::Ray;
 use crate::primitives::{self, Scene};
-use crate::primitives::{Ray};
 use nalgebra::{Vector3, Vector4};
-
 
 pub fn find_closest_point(
     ray: &Ray,
@@ -44,7 +43,6 @@ pub fn is_light_visible(
     }
 }
 
-
 pub fn shoot_ray(
     ray: &Ray,
     scene: &Scene,
@@ -63,13 +61,12 @@ pub fn shoot_ray(
                     let diffuse_color = material.diffuse_color;
                     // procedural texture
                     if index == 4 {
-                            // Compute UV coodinates for the point on the sphere
-                            // let xyz = intersection - Vector3::new(-2., 0.4, 1.);
-                            // let tu = (xyz.z / 1. ).acos() / std::f32::consts::PI;
-                            // let tv = (std::f32::consts::PI + xyz.y.atan2(xyz.x)) / (2. * std::f32::consts::PI);
-                            // diffuse_color = procedural_texture(tu, tv);
+                        // Compute UV coodinates for the point on the sphere
+                        // let xyz = intersection - Vector3::new(-2., 0.4, 1.);
+                        // let tu = (xyz.z / 1. ).acos() / std::f32::consts::PI;
+                        // let tv = (std::f32::consts::PI + xyz.y.atan2(xyz.x)) / (2. * std::f32::consts::PI);
+                        // diffuse_color = procedural_texture(tu, tv);
                     }
-
 
                     let light_vector = (light.position - intersection).normalize();
                     let bisector_direction = (light_vector - ray.direction).normalize();
