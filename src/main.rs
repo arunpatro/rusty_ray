@@ -1,9 +1,5 @@
-// mod primitives;
-// mod composites;
 use nalgebra::Vector3;
-// mod image_utils;
-// mod textures;
-// mod utils;
+use rusty_ray::{composites, image_utils, primitives, utils};
 
 fn render_scene() {
     // set the objects
@@ -46,10 +42,9 @@ fn render_scene() {
         primitives::CameraKind::PERSPECTIVE,
     );
 
-
     // render
     for i in 0..camera.width {
-            for j in 0..camera.height {
+        for j in 0..camera.height {
             let ray = camera.ray(i, j);
             let color = utils::shoot_ray(&ray, &scene, &material, 5);
             camera.image[(i, j)] = color;
