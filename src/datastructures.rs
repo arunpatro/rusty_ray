@@ -137,8 +137,40 @@ impl BVH {
     }
 
     pub fn intersects(&self, ray: &Ray) -> Option<HitPoint> {
-        recur_intersect(&self.root, ray)
+        stack_intersect(&self.root, ray)
     }
+    
+}
+
+fn stack_intersect(node: &AABBNode, ray: &Ray) -> Option<HitPoint> {
+    let mut stack = vec![node];
+
+    let mut closest_hit_point = None;
+    let mut closest_t = f32::INFINITY;
+
+    while let Some(node) = stack.pop() {
+        if !node.bbox.intersects(ray) {
+            continue;
+        }
+
+        match (&node.object, &node.left, &node.right) {
+            (Some(object), _, _) => {
+                if let Some(hit_point) = object.intersects(ray) {
+                    if hit_point.t < closest_t {
+                        closest_hit_point = Some(hit_point);
+                        closest_t = hit_point.t;
+                    }
+                }
+            }
+            (_, Some(left), Some(right)) => {
+                stack.push(left);
+                stack.push(right);
+            }
+            _ => {}
+        }
+    }
+
+    closest_hit_point
 }
 
 fn recur_intersect(node: &AABBNode, ray: &Ray) -> Option<HitPoint> {
