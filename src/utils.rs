@@ -60,13 +60,13 @@ pub fn shoot_ray(
                 if is_light_visible(light, &intersection, &scene.objects) {
                     let diffuse_color = material.diffuse_color;
                     // procedural texture
-                    if index == 4 {
+                    // if index == 4 {
                         // Compute UV coodinates for the point on the sphere
                         // let xyz = intersection - Vector3::new(-2., 0.4, 1.);
                         // let tu = (xyz.z / 1. ).acos() / std::f32::consts::PI;
                         // let tv = (std::f32::consts::PI + xyz.y.atan2(xyz.x)) / (2. * std::f32::consts::PI);
                         // diffuse_color = procedural_texture(tu, tv);
-                    }
+                    // }
 
                     let light_vector = (light.position - intersection).normalize();
                     let bisector_direction = (light_vector - ray.direction).normalize();
@@ -82,7 +82,7 @@ pub fn shoot_ray(
             }
 
             // reflection
-            if max_bounce > 0 {
+            // if max_bounce > 0 {
                 // let reflection_direction = (ray.direction - 2. * normal.dot(&ray.direction) * normal).normalize();
                 // let adjusted_origin = intersection + 1e-5 * reflection_direction;
                 // let reflection_ray = Ray::new(adjusted_origin, reflection_direction);
@@ -94,7 +94,7 @@ pub fn shoot_ray(
                 // );
 
                 // total_color += material.reflection_color.component_mul(&reflection_color.xyz());
-            }
+            // }
 
             let color = ambient_color + total_color;
             Vector4::new(color.x, color.y, color.z, 1.)
