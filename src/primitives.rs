@@ -79,6 +79,7 @@ impl Light {
     }
 }
 
+#[derive(Debug)]
 pub struct Ray {
     pub origin: Vector3<f32>,
     pub direction: Vector3<f32>,
@@ -198,6 +199,59 @@ impl Object for Parallelogram {
                 normal = -normal;
             }
             Some((t, point, normal))
+        }
+    }
+
+    fn normal(&self, _point: &Vector3<f32>) -> Vector3<f32> {
+        (self.point2 - self.point1)
+            .cross(&(self.point3 - self.point1))
+            .normalize()
+    }
+}
+
+pub struct Triangle {
+    pub point1: Vector3<f32>,
+    pub point2: Vector3<f32>,
+    pub point3: Vector3<f32>,
+}
+
+impl Triangle {
+    pub fn new(point1: Vector3<f32>, point2: Vector3<f32>, point3: Vector3<f32>) -> Self {
+        Self {
+            point1,
+            point2,
+            point3,
+        }
+    }
+}
+
+impl Object for Triangle {
+    fn intersects(&self, ray: &Ray) -> Option<(f32, Vector3<f32>, Vector3<f32>)> {
+        let bystem = self.point1 - ray.origin;
+        let asystem = Matrix3::from_columns(&[
+            self.point1 - self.point2,
+            self.point1 - self.point3,
+            ray.direction,
+        ]);
+        let uvt = asystem.lu().solve(&bystem);
+        match uvt {
+            Some(uvt) => {
+                let u = uvt[0];
+                let v = uvt[1];
+                let t = uvt[2];
+
+                if u < 0. || v < 0. || u + v >= 1. || t < 1e-6 {
+                    None
+                } else {
+                    let point = ray.origin + t * ray.direction;
+                    let mut normal = self.normal(&point);
+                    if normal.dot(&ray.direction) > 0. {
+                        normal = -normal;
+                    }
+                    Some((t, point, normal))
+                }
+            }
+            None => None,
         }
     }
 

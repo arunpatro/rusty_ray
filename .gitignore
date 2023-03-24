@@ -12,3 +12,5 @@ Cargo.lock
 .vscode
 *.png
 .DS_Store
+
+data/
