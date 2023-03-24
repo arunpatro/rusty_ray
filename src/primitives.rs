@@ -132,6 +132,7 @@ impl Object for Sphere {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct HitPoint {
     pub t: f32,
     pub point: Vector3<f32>,
