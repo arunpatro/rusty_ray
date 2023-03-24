@@ -1,9 +1,9 @@
-mod primitives;
-mod composites;
+// mod primitives;
+// mod composites;
 use nalgebra::Vector3;
-mod image_utils;
-mod textures;
-mod utils;
+// mod image_utils;
+// mod textures;
+// mod utils;
 
 fn render_scene() {
     // set the objects
