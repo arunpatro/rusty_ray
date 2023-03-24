@@ -209,6 +209,7 @@ impl Object for Parallelogram {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct Triangle {
     pub point1: Vector3<f32>,
     pub point2: Vector3<f32>,
@@ -222,6 +223,10 @@ impl Triangle {
             point2,
             point3,
         }
+    }
+
+    pub fn centroid(&self) -> Vector3<f32> {
+        (self.point1 + self.point2 + self.point3) / 3.
     }
 }
 
