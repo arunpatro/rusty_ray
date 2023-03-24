@@ -1,16 +1,18 @@
-use crate::primitives::{Triangle, Ray, Object};
+use crate::datastructures::BVH;
+use crate::primitives::{Object, Ray, Triangle, HitPoint};
 use nalgebra::{DMatrix, Matrix3, Vector3, Vector4};
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
-
 pub struct Mesh {
     pub triangles: Vec<Triangle>,
+    pub bvh: BVH,
 }
 
 impl Mesh {
     pub fn new(triangles: Vec<Triangle>) -> Self {
-        Self { triangles }
+        let bvh = BVH::new(&triangles);
+        Self { triangles, bvh }
     }
 
     pub fn from_off_file(path: &str) -> Self {
@@ -56,31 +58,23 @@ impl Mesh {
             triangles.push(triangle);
         }
 
-        Self { triangles }
+        Self::new(triangles)
     }
 }
 
 impl Object for Mesh {
-    fn intersects(&self, ray: &Ray) -> Option<(f32, Vector3<f32>, Vector3<f32>)> {
-        let mut closest_t = std::f32::MAX;
-        let mut closest_point = Vector3::new(0., 0., 0.);
-        let mut closest_normal = Vector3::new(0., 0., 0.);
-
+    fn intersects(&self, ray: &Ray) -> Option<HitPoint> {
+        let mut hit_point = None;
+        let mut min_t = std::f32::MAX;
         for triangle in &self.triangles {
-            if let Some((t, point, normal)) = triangle.intersects(ray) {
-                if t < closest_t {
-                    closest_t = t;
-                    closest_point = point;
-                    closest_normal = normal;
+            if let Some(hit) = triangle.intersects(ray) {
+                if hit.t < min_t {
+                    min_t = hit.t;
+                    hit_point = Some(hit);
                 }
             }
         }
-
-        if closest_t == std::f32::MAX {
-            None
-        } else {
-            Some((closest_t, closest_point, closest_normal))
-        }
+        hit_point
     }
 
     fn normal(&self, point: &Vector3<f32>) -> Vector3<f32> {

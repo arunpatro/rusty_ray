@@ -102,7 +102,7 @@ impl Sphere {
 }
 
 impl Object for Sphere {
-    fn intersects(&self, ray: &Ray) -> Option<(f32, Vector3<f32>, Vector3<f32>)> {
+    fn intersects(&self, ray: &Ray) -> Option<HitPoint> {
         let a = ray.direction.norm_squared();
         let b = 2. * ray.direction.dot(&(ray.origin - self.center));
         let c = (ray.origin - self.center).norm_squared() - self.radius.powi(2);
@@ -116,7 +116,11 @@ impl Object for Sphere {
             let t = if t1 < t2 { t1 } else { t2 };
             if t > 0. {
                 let point = ray.origin + t * ray.direction;
-                Some((t, point, self.normal(&point)))
+                Some(HitPoint {
+                    t,
+                    point,
+                    normal: self.normal(&point),
+                })
             } else {
                 None
             }
@@ -128,8 +132,13 @@ impl Object for Sphere {
     }
 }
 
+pub struct HitPoint {
+    pub t: f32,
+    pub point: Vector3<f32>,
+    pub normal: Vector3<f32>,
+}
 pub trait Object {
-    fn intersects(&self, ray: &Ray) -> Option<(f32, Vector3<f32>, Vector3<f32>)>;
+    fn intersects(&self, ray: &Ray) -> Option<HitPoint>;
     fn normal(&self, point: &Vector3<f32>) -> Vector3<f32>;
 }
 
@@ -179,7 +188,7 @@ impl Parallelogram {
 }
 
 impl Object for Parallelogram {
-    fn intersects(&self, ray: &Ray) -> Option<(f32, Vector3<f32>, Vector3<f32>)> {
+    fn intersects(&self, ray: &Ray) -> Option<HitPoint> {
         let bystem = self.point1 - ray.origin;
         let asystem = Matrix3::from_columns(&[
             self.point1 - self.point2,
@@ -198,7 +207,7 @@ impl Object for Parallelogram {
             if normal.dot(&ray.direction) > 0. {
                 normal = -normal;
             }
-            Some((t, point, normal))
+            Some(HitPoint { t, point, normal })
         }
     }
 
@@ -231,7 +240,7 @@ impl Triangle {
 }
 
 impl Object for Triangle {
-    fn intersects(&self, ray: &Ray) -> Option<(f32, Vector3<f32>, Vector3<f32>)> {
+    fn intersects(&self, ray: &Ray) -> Option<HitPoint> {
         let bystem = self.point1 - ray.origin;
         let asystem = Matrix3::from_columns(&[
             self.point1 - self.point2,
@@ -253,7 +262,7 @@ impl Object for Triangle {
                     if normal.dot(&ray.direction) > 0. {
                         normal = -normal;
                     }
-                    Some((t, point, normal))
+                    Some(HitPoint { t, point, normal })
                 }
             }
             None => None,
