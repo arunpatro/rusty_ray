@@ -4,7 +4,7 @@ use rusty_ray::{composites, image_utils, primitives, utils};
 fn render_scene() {
     // set the objects
     let objects: Vec<Box<dyn primitives::Object>> =
-        vec![Box::new(composites::Mesh::from_off_file("data/bunny.off"))];
+        vec![Box::new(composites::Mesh::from_off_file("data/dragon.off"))];
 
     // set the materials
     let material = primitives::Material::new(
@@ -34,7 +34,7 @@ fn render_scene() {
 
     // set the camera
     let mut camera = primitives::Camera::new(
-        0.7854,
+        0.3491,
         2.,
         640,
         480,

@@ -1,5 +1,5 @@
 use crate::datastructures::BVH;
-use crate::primitives::{Object, Ray, Triangle, HitPoint};
+use crate::primitives::{HitPoint, Object, Ray, Triangle};
 use nalgebra::{DMatrix, Matrix3, Vector3, Vector4};
 use std::fs::File;
 use std::io::{BufRead, BufReader};
@@ -64,17 +64,13 @@ impl Mesh {
 
 impl Object for Mesh {
     fn intersects(&self, ray: &Ray) -> Option<HitPoint> {
-        let mut hit_point = None;
-        let mut min_t = std::f32::MAX;
-        for triangle in &self.triangles {
-            if let Some(hit) = triangle.intersects(ray) {
-                if hit.t < min_t {
-                    min_t = hit.t;
-                    hit_point = Some(hit);
-                }
-            }
-        }
-        hit_point
+        self.bvh.intersects(&ray)
+
+        // this is the brute force way of doing it
+        // self.triangles
+        //     .iter()
+        //     .filter_map(|triangle| triangle.intersects(ray))
+        //     .min_by(|a, b| a.t.partial_cmp(&b.t).unwrap_or(Ordering::Equal))
     }
 
     fn normal(&self, point: &Vector3<f32>) -> Vector3<f32> {
