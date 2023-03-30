@@ -1,12 +1,12 @@
+use kdam::tqdm;
 use nalgebra::Vector3;
 use rusty_ray::{composites, image_utils, primitives, utils};
-use kdam::tqdm;
 
 fn render_scene() {
     // set the objects
     let objects: Vec<Box<dyn primitives::Object>> =
         vec![Box::new(composites::Mesh::from_off_file("data/bunny.off"))];
-        // vec![Box::new(composites::Mesh::from_off_file("data/dragon.off"))];
+    // vec![Box::new(composites::Mesh::from_off_file("data/dragon.off"))];
 
     // set the materials
     let material = primitives::Material::new(
@@ -37,15 +37,16 @@ fn render_scene() {
     // set the camera
     let mut camera = primitives::Camera::new(
         0.3491,
-        2.,
-        320,
-        240,
+        5.,
+        640,
+        480,
         Vector3::new(0., 0., 2.),
         primitives::CameraKind::PERSPECTIVE,
     );
 
     // render
-    for i in tqdm!(0..camera.width) {
+    // for i in tqdm!(0..camera.width) {
+    for i in 0..camera.width {
         for j in 0..camera.height {
             let ray = camera.ray(i, j);
             let color = utils::shoot_ray(&ray, &scene, &material, 5);
