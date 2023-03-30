@@ -1,6 +1,7 @@
 use crate::primitives::{HitPoint, Object, Ray, Triangle};
 use nalgebra::Vector3;
 use std::cmp::Ordering;
+use std::collections::VecDeque;
 
 #[derive(Default)]
 pub struct AlignedBox3d {
@@ -143,12 +144,14 @@ impl BVH {
 }
 
 fn stack_intersect(node: &AABBNode, ray: &Ray) -> Option<HitPoint> {
-    let mut stack = vec![node];
+    // init stack with root node
+    let mut stack = VecDeque::new();
+    stack.push_back(node);
 
     let mut closest_hit_point = None;
     let mut closest_t = f32::INFINITY;
 
-    while let Some(node) = stack.pop() {
+    while let Some(node) = stack.pop_back() {
         if !node.bbox.intersects(ray) {
             continue;
         }
@@ -163,8 +166,8 @@ fn stack_intersect(node: &AABBNode, ray: &Ray) -> Option<HitPoint> {
                 }
             }
             (_, Some(left), Some(right)) => {
-                stack.push(left);
-                stack.push(right);
+                stack.push_back(left);
+                stack.push_back(right);
             }
             _ => {}
         }
