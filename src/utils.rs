@@ -59,28 +59,28 @@ pub fn shoot_ray(
             // diffuse and specular
             let mut total_color = Vector3::new(0., 0., 0.);
             for light in &scene.lights {
-                if is_light_visible(light, &intersection, &scene.objects) {
-                    let diffuse_color = material.diffuse_color;
-                    // procedural texture
-                    // if index == 4 {
-                    // Compute UV coodinates for the point on the sphere
-                    // let xyz = intersection - Vector3::new(-2., 0.4, 1.);
-                    // let tu = (xyz.z / 1. ).acos() / std::f32::consts::PI;
-                    // let tv = (std::f32::consts::PI + xyz.y.atan2(xyz.x)) / (2. * std::f32::consts::PI);
-                    // diffuse_color = procedural_texture(tu, tv);
-                    // }
+                // if is_light_visible(light, &intersection, &scene.objects) {
+                let diffuse_color = material.diffuse_color;
+                // procedural texture
+                // if index == 4 {
+                // Compute UV coodinates for the point on the sphere
+                // let xyz = intersection - Vector3::new(-2., 0.4, 1.);
+                // let tu = (xyz.z / 1. ).acos() / std::f32::consts::PI;
+                // let tv = (std::f32::consts::PI + xyz.y.atan2(xyz.x)) / (2. * std::f32::consts::PI);
+                // diffuse_color = procedural_texture(tu, tv);
+                // }
 
-                    let light_vector = (light.position - intersection).normalize();
-                    let bisector_direction = (light_vector - ray.direction).normalize();
-                    let diffuse_coeff = normal.dot(&light_vector).max(0.);
-                    let specular_coeff = normal.dot(&bisector_direction).max(0.).powf(256.);
+                let light_vector = (light.position - intersection).normalize();
+                let bisector_direction = (light_vector - ray.direction).normalize();
+                let diffuse_coeff = normal.dot(&light_vector).max(0.);
+                let specular_coeff = normal.dot(&bisector_direction).max(0.).powf(256.);
 
-                    let diffuse = diffuse_coeff * diffuse_color;
-                    let specular = specular_coeff * material.specular_color;
+                let diffuse = diffuse_coeff * diffuse_color;
+                let specular = specular_coeff * material.specular_color;
 
-                    let attenuation = (light.position - intersection).norm_squared(); // attenuation is square of distance
-                    total_color += light.color.component_mul(&(diffuse + specular)) / attenuation;
-                }
+                let attenuation = (light.position - intersection).norm_squared(); // attenuation is square of distance
+                total_color += light.color.component_mul(&(diffuse + specular)) / attenuation;
+                // }
             }
 
             // reflection
