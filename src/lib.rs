@@ -4,3 +4,4 @@ pub mod primitives;
 pub mod image_utils;
 pub mod utils;
 pub mod textures;
+pub mod raster;

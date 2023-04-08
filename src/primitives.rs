@@ -138,6 +138,7 @@ pub struct HitPoint {
     pub point: Vector3<f32>,
     pub normal: Vector3<f32>,
 }
+
 pub trait Object {
     fn intersects(&self, ray: &Ray) -> Option<HitPoint>;
     fn normal(&self, point: &Vector3<f32>) -> Vector3<f32>;
@@ -219,7 +220,7 @@ impl Object for Parallelogram {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct Triangle {
     pub point1: Vector3<f32>,
     pub point2: Vector3<f32>,
@@ -237,6 +238,12 @@ impl Triangle {
 
     pub fn centroid(&self) -> Vector3<f32> {
         (self.point1 + self.point2 + self.point3) / 3.
+    }
+
+    pub fn normal(&self) -> Vector3<f32> {
+        (self.point2 - self.point1)
+            .cross(&(self.point3 - self.point1))
+            .normalize()
     }
 }
 
@@ -259,7 +266,8 @@ impl Object for Triangle {
                     None
                 } else {
                     let point = ray.origin + t * ray.direction;
-                    let mut normal = self.normal(&point);
+                    // let mut normal = self.normal(&point);
+                    let mut normal = Object::normal(self, &point); //this is required because we wan't to have a default implementation of the normal function in the base struct 
                     if normal.dot(&ray.direction) > 0. {
                         normal = -normal;
                     }
@@ -271,9 +279,7 @@ impl Object for Triangle {
     }
 
     fn normal(&self, _point: &Vector3<f32>) -> Vector3<f32> {
-        (self.point2 - self.point1)
-            .cross(&(self.point3 - self.point1))
-            .normalize()
+        self.normal()
     }
 }
 
