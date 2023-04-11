@@ -14,5 +14,9 @@ here are some notes about doing this in rust and comparing a similar implementat
     - this is somewhat equivalent to having that t_value > epsilon to be considered a interaction (???)
     - similar error happens and creates artifacts when we try to calculate the reflected ray, we need to keep it epsilon away from the surface
 
+### y-axis convention
+- sometimes we have a situation where the image buffer origin is at top-left but in cpp the matrix and image construction happens from bottom-left. These can cause weird stuff to happen like orientation and light mismatch?? 
+- somehow in rust, the bunny is displayed already in a canonical volume but not in cpp, need to check
+
 ### Using Vulcan via Volcano
 - We also study optimizing the graphics pipeline using the vulcan api. We use the [volcano]. 
