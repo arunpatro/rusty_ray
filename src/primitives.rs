@@ -145,7 +145,6 @@ pub trait Object {
 }
 
 pub struct Material {
-    pub ambient_color: Vector3<f32>,
     pub diffuse_color: Vector3<f32>,
     pub specular_color: Vector3<f32>,
     pub specular_exponent: f32,
@@ -155,7 +154,6 @@ pub struct Material {
 
 impl Material {
     pub fn new(
-        ambient_color: Vector3<f32>,
         diffuse_color: Vector3<f32>,
         specular_color: Vector3<f32>,
         specular_exponent: f32,
@@ -163,7 +161,6 @@ impl Material {
         refraction_color: Vector3<f32>,
     ) -> Self {
         Self {
-            ambient_color,
             diffuse_color,
             specular_color,
             specular_exponent,
@@ -286,22 +283,19 @@ impl Object for Triangle {
 pub struct Scene {
     pub objects: Vec<Box<dyn Object>>,
     pub lights: Vec<Light>,
-    pub ambient_light: Vector3<f32>,
-    pub background_color: Vector3<f32>,
+    pub ambient_color: Vector3<f32>,
 }
 
 impl Scene {
     pub fn new(
         objects: Vec<Box<dyn Object>>,
         lights: Vec<Light>,
-        ambient_light: Vector3<f32>,
-        background_color: Vector3<f32>,
+        ambient_color: Vector3<f32>,
     ) -> Self {
         Self {
             objects,
             lights,
-            ambient_light,
-            background_color,
+            ambient_color,
         }
     }
 }
