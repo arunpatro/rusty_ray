@@ -54,7 +54,7 @@ pub fn shoot_ray(
         Some((index, hit_point)) => {
             let intersection = hit_point.point;
             let normal = hit_point.normal;
-            let ambient_color = material.ambient_color.component_mul(&scene.ambient_light);
+            let ambient_color = scene.ambient_color;
 
             // diffuse and specular
             let mut total_color = Vector3::new(0., 0., 0.);

@@ -23,7 +23,6 @@ fn render_scene() {
 
     // set the materials
     let material = primitives::Material::new(
-        Vector3::new(0.5, 0.1, 0.1),
         Vector3::new(0.5, 0.5, 0.5),
         Vector3::new(0.2, 0.2, 0.2),
         256.,
@@ -32,7 +31,6 @@ fn render_scene() {
     );
 
     // set the lights
-    let ambient_light = Vector3::new(0.2, 0.2, 0.2);
     let lights: Vec<primitives::Light> = vec![
         primitives::Light::new(Vector3::new(8., 8., 0.), Vector3::new(16., 16., 16.)),
         primitives::Light::new(Vector3::new(6., -8., 0.), Vector3::new(16., 16., 16.)),
@@ -44,8 +42,10 @@ fn render_scene() {
     ];
 
     // set the scene
-    let background_color = Vector3::new(0., 0.1, 0.7);
-    let scene = primitives::Scene::new(objects, lights, ambient_light, background_color);
+    let ambient_light = Vector3::new(0.2, 0.2, 0.2);
+    let ambient_color = Vector3::new(0.5, 0.1, 0.1);
+    let ambient_color = ambient_color.component_mul(&ambient_light);
+    let scene = primitives::Scene::new(objects, lights, ambient_color);
 
     // set the camera
     let mut camera = primitives::Camera::new(
