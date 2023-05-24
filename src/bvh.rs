@@ -1,12 +1,12 @@
 use kdam::tqdm;
 use nalgebra::Vector3;
-use rusty_ray::{composites, image_utils, primitives, utils};
+use crate::{composites, image_utils, primitives, utils};
 
-fn render_scene() {
+pub fn render_scene() {
     // set the objects
     let objects: Vec<Box<dyn primitives::Object>> =
-        // vec![Box::new(composites::Mesh::from_off_file("data/bunny.off"))];
-    vec![Box::new(composites::Mesh::from_off_file("data/dragon.off"))];
+        vec![Box::new(composites::Mesh::from_off_file("data/bunny.off"))];
+    // vec![Box::new(composites::Mesh::from_off_file("data/dragon.off"))];
 
     // set the materials
     let material = primitives::Material::new(
@@ -54,6 +54,6 @@ fn render_scene() {
         }
     }
 
-    image_utils::save_as_png(camera, "mesh.png");
+    image_utils::save_as_png(camera, "bvh.png");
 }
 

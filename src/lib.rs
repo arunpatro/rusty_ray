@@ -5,3 +5,4 @@ pub mod image_utils;
 pub mod utils;
 pub mod textures;
 pub mod raster;
+pub mod bvh;

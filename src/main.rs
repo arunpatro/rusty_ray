@@ -1,6 +1,6 @@
 use kdam::tqdm;
 use nalgebra::Vector3;
-use rusty_ray::{composites, image_utils, primitives, raster, utils};
+use rusty_ray::{composites, image_utils, primitives, raster, bvh};
 
 fn render_scene() {
     // objects are now only meshes because they need to have the triangles property which other
@@ -32,5 +32,5 @@ fn render_scene() {
 
 fn main() {
     println!("Welcome to rusty ray tracer!");
-    render_scene();
+    bvh::render_scene();
 }

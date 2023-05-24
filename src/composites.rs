@@ -1,4 +1,4 @@
-use crate::datastructures::BVH;
+use crate::datastructures::{AABBNode, BVH};
 use crate::primitives::{HitPoint, Object, Ray, Triangle};
 use nalgebra::{DMatrix, Matrix3, Vector3, Vector4};
 use std::fs::File;
@@ -60,11 +60,43 @@ impl Mesh {
 
         Self::new(triangles)
     }
+
+    fn stack_intersect(&self, node: &AABBNode, ray: &Ray) -> Option<HitPoint> {
+        let mut stack = vec![node];
+
+        let mut closest_hit_point = None;
+        let mut closest_t = f32::INFINITY;
+
+        while let Some(node) = stack.pop() {
+            if !node.bbox.intersects(ray) {
+                continue;
+            }
+
+            match (node.object_idx, &node.left, &node.right) {
+                (Some(object_idx), _, _) => {
+                    if let Some(hit_point) = self.triangles[object_idx].intersects(ray) {
+                        if hit_point.t < closest_t {
+                            closest_hit_point = Some(hit_point);
+                            closest_t = hit_point.t;
+                        }
+                    }
+                }
+                (_, Some(left), Some(right)) => {
+                    stack.push(left);
+                    stack.push(right);
+                }
+                _ => {}
+            }
+        }
+
+        closest_hit_point
+    }
 }
 
 impl Object for Mesh {
     fn intersects(&self, ray: &Ray) -> Option<HitPoint> {
-        self.bvh.intersects(&ray)
+        // self.bvh.intersects(&ray)
+        self.stack_intersect(&self.bvh.root, ray)
 
         // this is the brute force way of doing it
         // self.triangles

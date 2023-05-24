@@ -68,7 +68,7 @@ pub struct AABBNode {
     pub bbox: AlignedBox3d,
     pub left: Option<Box<AABBNode>>,
     pub right: Option<Box<AABBNode>>,
-    pub object: Option<Box<dyn Object>>,
+    pub object_idx: Option<usize>,
 }
 
 impl AABBNode {
@@ -76,119 +76,87 @@ impl AABBNode {
         bbox: AlignedBox3d,
         left: Option<Box<AABBNode>>,
         right: Option<Box<AABBNode>>,
-        object: Option<Box<dyn Object>>,
+        object_idx: Option<usize>,
     ) -> Self {
         Self {
             bbox,
             left,
             right,
-            object,
+            object_idx,
         }
     }
 }
 
 pub struct BVH {
     pub root: AABBNode,
+
 }
 
 impl BVH {
     pub fn new(triangles: &Vec<Triangle>) -> Self {
+        let triangle_indices: Vec<usize> = (0..triangles.len()).collect();
         Self {
-            root: Self::create_node(triangles),
+            root: Self::create_node(&triangles, triangle_indices),
         }
     }
 
-    fn create_node(triangles: &[Triangle]) -> AABBNode {
-        if triangles.is_empty() {
+    fn create_node(triangles: &[Triangle], triangle_indices: Vec<usize>) -> AABBNode {
+        if triangle_indices.is_empty() {
             panic!("Cannot create an AABBNode with no triangles.");
         }
 
         let mut bbox = AlignedBox3d::default();
-        for triangle in triangles {
-            bbox.extend_triangle(&triangle);
+        for idx in &triangle_indices {
+            bbox.extend_triangle(&triangles[*idx]);
         }
 
         // if leaf node
-        if triangles.len() == 1 {
-            return AABBNode::new(bbox, None, None, Some(Box::new(triangles[0].clone())));
+        if triangle_indices.len() == 1 {
+            return AABBNode::new(bbox, None, None, Some(triangle_indices[0]));
         }
 
         // if not leaf node
         let diag = bbox.max - bbox.min;
         let axis_index = diag.x.max(diag.y.max(diag.z)) as usize;
 
-        let mut sorted_triangles = triangles.to_vec();
-        // sorted_triangles.sort_by(|a, b| {
-        //     let a_center = a.centroid();
-        //     let b_center = b.centroid();
+        let mut sorted_indices = triangle_indices;
+        // sorted_indices.sort_by(|a, b| {
+        //     let a_center = triangles[*a].centroid();
+        //     let b_center = triangles[*b].centroid();
 
         //     a_center[axis_index]
         //         .partial_cmp(&b_center[axis_index])
         //         .unwrap_or(Ordering::Equal)
         // });
 
-        let mid = sorted_triangles.len() / 2;
-        let (left_triangles, right_triangles) = sorted_triangles.split_at(mid);
+        let mid = sorted_indices.len() / 2;
+        let (left_triangle_indices, right_triangle_indices) = sorted_indices.split_at(mid);
 
-        let left = Self::create_node(left_triangles);
-        let right = Self::create_node(right_triangles);
+        let left = Self::create_node(triangles, left_triangle_indices.to_vec());
+        let right = Self::create_node(triangles, right_triangle_indices.to_vec());
 
         AABBNode::new(bbox, Some(Box::new(left)), Some(Box::new(right)), None)
     }
 
-    pub fn intersects(&self, ray: &Ray) -> Option<HitPoint> {
-        stack_intersect(&self.root, ray)
-    }
     
 }
 
-fn stack_intersect(node: &AABBNode, ray: &Ray) -> Option<HitPoint> {
-    let mut stack = vec![node];
+// fn recur_intersect(node: &AABBNode, ray: &Ray) -> Option<HitPoint> {
+//     if !node.bbox.intersects(ray) {
+//         return None;
+//     }
 
-    let mut closest_hit_point = None;
-    let mut closest_t = f32::INFINITY;
+//     match (&node.object, &node.left, &node.right) {
+//         (Some(object), _, _) => object.intersects(ray),
+//         (_, Some(left), Some(right)) => {
+//             let left_res = recur_intersect(left, ray);
+//             let right_res = recur_intersect(right, ray);
 
-    while let Some(node) = stack.pop() {
-        if !node.bbox.intersects(ray) {
-            continue;
-        }
-
-        match (&node.object, &node.left, &node.right) {
-            (Some(object), _, _) => {
-                if let Some(hit_point) = object.intersects(ray) {
-                    if hit_point.t < closest_t {
-                        closest_hit_point = Some(hit_point);
-                        closest_t = hit_point.t;
-                    }
-                }
-            }
-            (_, Some(left), Some(right)) => {
-                stack.push(left);
-                stack.push(right);
-            }
-            _ => {}
-        }
-    }
-
-    closest_hit_point
-}
-
-fn recur_intersect(node: &AABBNode, ray: &Ray) -> Option<HitPoint> {
-    if !node.bbox.intersects(ray) {
-        return None;
-    }
-
-    match (&node.object, &node.left, &node.right) {
-        (Some(object), _, _) => object.intersects(ray),
-        (_, Some(left), Some(right)) => {
-            let left_res = recur_intersect(left, ray);
-            let right_res = recur_intersect(right, ray);
-
-            left_res
-                .into_iter()
-                .chain(right_res.into_iter())
-                .min_by(|a, b| a.t.partial_cmp(&b.t).unwrap_or(Ordering::Equal))
-        }
-        _ => None,
-    }
-}
+//             left_res
+//                 .into_iter()
+//                 .chain(right_res.into_iter())
+//                 .min_by(|a, b| a.t.partial_cmp(&b.t).unwrap_or(Ordering::Equal))
+//         }
+//         _ => None,
+//     }
+// }
