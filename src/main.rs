@@ -27,7 +27,7 @@ fn render_scene() {
     // render via rasterization
     raster::rasterize(&mesh, &mut camera, &lights);
 
-    image_utils::save_as_png(camera, "mesh.png");
+    image_utils::save_as_png(camera, "raster.png");
 }
 
 fn main() {
