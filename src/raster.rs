@@ -89,13 +89,13 @@ pub fn rasterize(mesh: &composites::Mesh, camera: &mut primitives::Camera, light
         // println!("{} {} {} {}", lx, ly, ux, uy);
 
         // Build the implicit triangle representation from matrix p
-        let mA = p;
-        let mAi = mA.try_inverse().unwrap();
+        let matrix_A = p;
+        let matrix_A_inv = matrix_A.try_inverse().unwrap();
 
         for i in lx..ux {
             for j in ly..uy {
                 let pixel = nalgebra::Vector3::new(i as f32 + 0.5, j as f32 + 0.5, 1.);
-                let bary_coords = mAi * pixel;
+                let bary_coords = matrix_A_inv * pixel;
                 let v = vertexInterpolation(&triangle, bary_coords);
                 if i == 250 && j == 240 {
                     // println!("i {} j {}", i, j);
