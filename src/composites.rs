@@ -63,17 +63,24 @@ impl Mesh {
 
     fn stack_intersect(&self, node: &AABBNode, ray: &Ray) -> Option<HitPoint> {
         let mut stack = vec![node];
-
+        // println!("Stack: {}", stack.iter().map(|n| n.id.to_string()).collect::<Vec<_>>().join(" "));
         let mut closest_hit_point = None;
         let mut closest_t = f32::INFINITY;
 
         while let Some(node) = stack.pop() {
+            // let stack_str: String = stack.iter().map(|n| n.id.to_string()).collect::<Vec<_>>().join(" ");
+            // println!("N: {} st: {}", node.id, stack_str);
+            if node.id == 61 {
+                // println!("cult");
+            }
             if !node.bbox.intersects(ray) {
                 continue;
             }
 
             match (node.object_idx, &node.left, &node.right) {
                 (Some(object_idx), _, _) => {
+                    // let stack_str: String = stack.iter().map(|n| n.id.to_string()).collect::<Vec<_>>().join(" ");
+                    // println!("T:{} - N:{} | Stack: {}", object_idx, node.id, stack_str);
                     if let Some(hit_point) = self.triangles[object_idx].intersects(ray) {
                         if hit_point.t < closest_t {
                             closest_hit_point = Some(hit_point);

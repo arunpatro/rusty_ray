@@ -2,10 +2,30 @@ use crate::primitives::{HitPoint, Object, Ray, Triangle};
 use nalgebra::Vector3;
 use std::cmp::Ordering;
 
-#[derive(Default)]
+// this default is wrong!!!
+// #[derive(Default)]
+#[derive(Debug)]
 pub struct AlignedBox3d {
     pub min: Vector3<f32>,
     pub max: Vector3<f32>,
+}
+
+// impl Default for AlignedBox3d {
+//     fn default() -> Self {
+//         Self {
+//             min: Vector3::new(f32::INFINITY, f32::INFINITY, f32::INFINITY),
+//             max: Vector3::new(f32::NEG_INFINITY, f32::NEG_INFINITY, f32::NEG_INFINITY),
+//         }
+//     }
+// }
+
+impl Default for AlignedBox3d {
+    fn default() -> Self {
+        Self {
+            min: Vector3::new(f32::MAX, f32::MAX, f32::MAX),
+            max: Vector3::new(f32::MIN, f32::MIN, f32::MIN),
+        }
+    }
 }
 
 impl AlignedBox3d {
@@ -65,6 +85,7 @@ impl AlignedBox3d {
 }
 
 pub struct AABBNode {
+    pub id: usize,
     pub bbox: AlignedBox3d,
     pub left: Option<Box<AABBNode>>,
     pub right: Option<Box<AABBNode>>,
@@ -73,12 +94,14 @@ pub struct AABBNode {
 
 impl AABBNode {
     pub fn new(
+        id: usize,
         bbox: AlignedBox3d,
         left: Option<Box<AABBNode>>,
         right: Option<Box<AABBNode>>,
         object_idx: Option<usize>,
     ) -> Self {
         Self {
+            id,
             bbox,
             left,
             right,
@@ -96,26 +119,27 @@ impl BVH {
     pub fn new(triangles: &Vec<Triangle>) -> Self {
         let triangle_indices: Vec<usize> = (0..triangles.len()).collect();
         Self {
-            root: Self::create_node(&triangles, triangle_indices),
+            root: Self::create_node(0, &triangles, triangle_indices),
         }
     }
 
-    fn create_node(triangles: &[Triangle], triangle_indices: Vec<usize>) -> AABBNode {
+    fn create_node(root_id: usize, triangles: &[Triangle], triangle_indices: Vec<usize>) -> AABBNode {
         if triangle_indices.is_empty() {
             panic!("Cannot create an AABBNode with no triangles.");
         }
 
+        // if leaf node
+        if triangle_indices.len() == 1 {
+            let mut bbox = AlignedBox3d::default();
+            bbox.extend_triangle(&triangles[triangle_indices[0]]);
+            return AABBNode::new(root_id, bbox, None, None, Some(triangle_indices[0]));
+        }
+        
+        // if not leaf node
         let mut bbox = AlignedBox3d::default();
         for idx in &triangle_indices {
             bbox.extend_triangle(&triangles[*idx]);
         }
-
-        // if leaf node
-        if triangle_indices.len() == 1 {
-            return AABBNode::new(bbox, None, None, Some(triangle_indices[0]));
-        }
-
-        // if not leaf node
         let diag = bbox.max - bbox.min;
         let axis_index = diag.x.max(diag.y.max(diag.z)) as usize;
 
@@ -132,10 +156,10 @@ impl BVH {
         let mid = sorted_indices.len() / 2;
         let (left_triangle_indices, right_triangle_indices) = sorted_indices.split_at(mid);
 
-        let left = Self::create_node(triangles, left_triangle_indices.to_vec());
-        let right = Self::create_node(triangles, right_triangle_indices.to_vec());
+        let left = Self::create_node(2* root_id + 1, triangles, left_triangle_indices.to_vec());
+        let right = Self::create_node(2* root_id + 2, triangles, right_triangle_indices.to_vec());
 
-        AABBNode::new(bbox, Some(Box::new(left)), Some(Box::new(right)), None)
+        AABBNode::new(root_id, bbox, Some(Box::new(left)), Some(Box::new(right)), None)
     }
 
     
