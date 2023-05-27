@@ -3,6 +3,7 @@ use crate::primitives::{HitPoint, Object, Ray, Triangle};
 use nalgebra::{DMatrix, Matrix3, Vector3, Vector4};
 use std::fs::File;
 use std::io::{BufRead, BufReader};
+use std::cmp::Ordering;
 
 pub struct Mesh {
     pub triangles: Vec<Triangle>,
@@ -91,12 +92,32 @@ impl Mesh {
 
         closest_hit_point
     }
+
+    fn recur_intersect(&self, node: &AABBNode, ray: &Ray) -> Option<HitPoint> {
+        if !node.bbox.intersects(ray) {
+            return None;
+        }
+
+        match (node.object_idx, &node.left, &node.right) {
+            (Some(object_idx), _, _) => self.triangles[object_idx].intersects(ray),
+            (_, Some(left), Some(right)) => {
+                let left_res = self.recur_intersect(left, ray);
+                let right_res = self.recur_intersect(right, ray);
+
+                left_res
+                    .into_iter()
+                    .chain(right_res.into_iter())
+                    .min_by(|a, b| a.t.partial_cmp(&b.t).unwrap_or(Ordering::Equal))
+            }
+            _ => None,
+        }
+    }
 }
 
 impl Object for Mesh {
     fn intersects(&self, ray: &Ray) -> Option<HitPoint> {
-        // self.bvh.intersects(&ray)
         self.stack_intersect(&self.bvh.root, ray)
+        // self.recur_intersect(&self.bvh.root, ray)
 
         // this is the brute force way of doing it
         // self.triangles
