@@ -1,11 +1,18 @@
-use crate::primitives::{HitPoint, Object, Ray, Triangle};
+use crate::primitives::{Ray, Triangle};
 use nalgebra::Vector3;
-use std::cmp::Ordering;
 
-#[derive(Default)]
 pub struct AlignedBox3d {
     pub min: Vector3<f32>,
     pub max: Vector3<f32>,
+}
+
+impl Default for AlignedBox3d {
+    fn default() -> Self {
+        Self {
+            min: Vector3::new(f32::INFINITY, f32::INFINITY, f32::INFINITY),
+            max: Vector3::new(f32::NEG_INFINITY, f32::NEG_INFINITY, f32::NEG_INFINITY),
+        }
+    }
 }
 
 impl AlignedBox3d {
@@ -105,15 +112,18 @@ impl BVH {
             panic!("Cannot create an AABBNode with no triangles.");
         }
 
+        // if leaf node
+        if triangle_indices.len() == 1 {
+            let mut bbox = AlignedBox3d::default();
+            bbox.extend_triangle(&triangles[triangle_indices[0]]);
+            return AABBNode::new(bbox, None, None, Some(triangle_indices[0]));
+        }
+
         let mut bbox = AlignedBox3d::default();
         for idx in &triangle_indices {
             bbox.extend_triangle(&triangles[*idx]);
         }
 
-        // if leaf node
-        if triangle_indices.len() == 1 {
-            return AABBNode::new(bbox, None, None, Some(triangle_indices[0]));
-        }
 
         // if not leaf node
         let diag = bbox.max - bbox.min;

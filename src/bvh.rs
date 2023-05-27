@@ -1,12 +1,11 @@
-use kdam::tqdm;
-use nalgebra::Vector3;
 use crate::{composites, image_utils, primitives, utils};
+use nalgebra::Vector3;
 
 pub fn render_scene() {
     // set the objects
     let objects: Vec<Box<dyn primitives::Object>> =
-        vec![Box::new(composites::Mesh::from_off_file("data/bunny.off"))];
-    // vec![Box::new(composites::Mesh::from_off_file("data/dragon.off"))];
+        // vec![Box::new(composites::Mesh::from_off_file("data/bunny.off"))];
+    vec![Box::new(composites::Mesh::from_off_file("data/dragon.off"))];
 
     // set the materials
     let material = primitives::Material::new(
@@ -45,8 +44,7 @@ pub fn render_scene() {
     );
 
     // render
-    for i in tqdm!(0..camera.width) {
-    // for i in 0..camera.width {
+    for i in 0..camera.width {
         for j in 0..camera.height {
             let ray = camera.ray(i, j);
             let color = utils::shoot_ray(&ray, &scene, &material, 5);
@@ -56,4 +54,3 @@ pub fn render_scene() {
 
     image_utils::save_as_png(camera, "bvh.png");
 }
-
