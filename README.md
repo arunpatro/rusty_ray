@@ -18,5 +18,5 @@ here are some notes about doing this in rust and comparing a similar implementat
 - sometimes we have a situation where the image buffer origin is at top-left but in cpp the matrix and image construction happens from bottom-left. These can cause weird stuff to happen like orientation and light mismatch?? 
 - somehow in rust, the bunny is displayed already in a canonical volume but not in cpp, need to check
 
-### Using Vulcan via Volcano
-- We also study optimizing the graphics pipeline using the vulcan api. We use the [volcano]. 
+### other
+- a lot of errors were happening due to the incorrect default initialization of the AlignedBox3d - default macro would assign 0 to all Vec3 but that's wrong. 
