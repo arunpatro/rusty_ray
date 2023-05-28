@@ -1,5 +1,7 @@
-use crate::primitives::{self, Scene};
-use crate::primitives::{HitPoint, Ray};
+use crate::{
+    primitives::{self, HitPoint, Ray, Scene},
+    textures,
+};
 use nalgebra::{Vector3, Vector4};
 
 pub fn find_closest_point(
@@ -51,23 +53,24 @@ pub fn shoot_ray(
 ) -> Vector4<f64> {
     let ans = find_closest_point(ray, &scene.objects);
     match ans {
-        Some((index, hit_point)) => {
+        Some((object_idx, hit_point)) => {
             let intersection = hit_point.point;
             let normal = hit_point.normal;
             let ambient_color = scene.ambient_color;
 
             // diffuse and specular
-            let mut total_color = Vector3::new(0., 0., 0.);
+            let mut lights_color = Vector3::new(0., 0., 0.);
             for light in &scene.lights {
-                // if is_light_visible(light, &intersection, &scene.objects) {
-                let diffuse_color = material.diffuse_color;
+                if is_light_visible(light, &intersection, &scene.objects) {
+                let mut diffuse_color = material.diffuse_color;
                 // procedural texture
-                // if index == 4 {
-                // Compute UV coodinates for the point on the sphere
-                // let xyz = intersection - Vector3::new(-2., 0.4, 1.);
-                // let tu = (xyz.z / 1. ).acos() / std::f64::consts::PI;
-                // let tv = (std::f64::consts::PI + xyz.y.atan2(xyz.x)) / (2. * std::f64::consts::PI);
-                // diffuse_color = procedural_texture(tu, tv);
+                // if object_idx == 4 {
+                //     // Compute UV coodinates for the point on the sphere
+                //     let xyz = intersection - Vector3::new(-2., 0.4, 1.);
+                //     let tu = (xyz.z / 1.).acos() / std::f64::consts::PI;
+                //     let tv =
+                //         (std::f64::consts::PI + xyz.y.atan2(xyz.x)) / (2. * std::f64::consts::PI);
+                //     diffuse_color = textures::procedural_texture(tu, tv);
                 // }
 
                 let light_vector = (light.position - intersection).normalize();
@@ -79,30 +82,26 @@ pub fn shoot_ray(
                 let specular = specular_coeff * material.specular_color;
 
                 let attenuation = (light.position - intersection).norm_squared(); // attenuation is square of distance
-                total_color += light.color.component_mul(&(diffuse + specular)) / attenuation;
-                // }
+                lights_color += light.color.component_mul(&(diffuse + specular)) / attenuation;
+                }
             }
 
             // reflection
-            // if max_bounce > 0 {
-            // let reflection_direction = (ray.direction - 2. * normal.dot(&ray.direction) * normal).normalize();
-            // let adjusted_origin = intersection + 1e-5 * reflection_direction;
-            // let reflection_ray = Ray::new(adjusted_origin, reflection_direction);
-            // let reflection_color = shoot_ray(
-            //     &reflection_ray,
-            //     &scene,
-            //     &material,
-            //     max_bounce - 1,
-            // );
+            let mut reflection_color = Vector3::new(0., 0., 0.);
+            if max_bounce > 0 {
+                let reflection_direction =
+                    (ray.direction - 2. * normal.dot(&ray.direction) * normal).normalize();
+                let adjusted_origin = intersection + 1e-5 * reflection_direction;
+                let reflection_ray = Ray::new(adjusted_origin, reflection_direction);
+                let refl_color = shoot_ray(&reflection_ray, &scene, &material, max_bounce - 1);
+                reflection_color = material.reflection_color.component_mul(&refl_color.xyz());
+            }
 
-            // total_color += material.reflection_color.component_mul(&reflection_color.xyz());
-            // }
-
-            let color = ambient_color + total_color;
+            let color = ambient_color + lights_color + reflection_color;
             Vector4::new(color.x, color.y, color.z, 1.)
         }
         None => {
-            // no intersection
+            // no intersection, can return a None and handle default color on its own, but keeping for parity with cpp
             Vector4::new(0., 0., 0., 0.)
         }
     }

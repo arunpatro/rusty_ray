@@ -42,7 +42,7 @@ fn perlin(x: f64, y: f64, grid: &[[Vector2<f64>; 4]; 4]) -> f64 {
     lerp(ix0, ix1, sy)
 }
 
-pub fn procedural_texture(tu: f32, tv: f32) -> Vector3<f32> {
+pub fn procedural_texture(tu: f64, tv: f64) -> Vector3<f64> {
     let grid_size = 20;
     assert!(tu >= 0.0);
     assert!(tv >= 0.0);
@@ -56,6 +56,6 @@ pub fn procedural_texture(tu: f32, tv: f32) -> Vector3<f32> {
 
     // Example for checkerboard texture
     let color =
-        (tu * grid_size as f32).floor() as i32 + (tv * grid_size as f32).floor() as i32 % 2 == 0;
-    Vector3::new(0.0, color as i32 as f32, 0.0)
+        (tu * grid_size as f64).floor() as i32 + (tv * grid_size as f64).floor() as i32 % 2 == 0;
+    Vector3::new(0.0, color as i32 as f64, 0.0)
 }

@@ -52,9 +52,9 @@ fn raytracing_task() {
     // set the camera
     let mut camera = primitives::Camera::new(
         0.7854,
-        5.,
-        2400,
-        1600,
+        10.,
+        1200,
+        800,
         Vector3::new(0., 1., 10.),
         primitives::CameraKind::PERSPECTIVE,
     );
@@ -167,7 +167,7 @@ fn raster_task() {
 }
 
 fn main() {
-    // raytracing_task();
+    raytracing_task();
     // bvh_task();
-    raster_task();
+    // raster_task();
 }

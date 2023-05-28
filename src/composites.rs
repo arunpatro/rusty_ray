@@ -1,6 +1,6 @@
 use crate::datastructures::{AABBNode, BVH};
 use crate::primitives::{HitPoint, Object, Ray, Triangle};
-use nalgebra::{DMatrix, Matrix3, Vector3, Vector4};
+use nalgebra::{Vector3, Vector4};
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::cmp::Ordering;
@@ -127,7 +127,7 @@ impl Object for Mesh {
     }
 
     fn normal(&self, point: &Vector3<f64>) -> Vector3<f64> {
-        // this is not correct, because its very cumbersome to calculate which triangle the point is in and then get the normal from that triangle
+        // this is not correct, we don't use it, because its very cumbersome to calculate which triangle the point is in and then get the normal from that triangle
         // we can calculate baricentric coordinates to get the triangle, and accelerate with a BVH
         Vector3::new(0., 0., 0.)
     }
