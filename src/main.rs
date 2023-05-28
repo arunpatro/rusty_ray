@@ -133,10 +133,7 @@ fn raster_task() {
     // let mesh = composites::Mesh::from_off_file("data/dragon.off");
 
     let ambient_color = Vector3::new(0.2, 0.2, 0.2);
-    let light = primitives::Light::new(
-        Vector3::new(-1., 1., 3.),
-        Vector3::new(0.2, 0.5, 0.1),
-    );
+    let light = primitives::Light::new(Vector3::new(-1., 1., 3.), Vector3::new(0.2, 0.5, 0.1));
 
     // set the camera
     let mut camera = primitives::Camera::new(
@@ -144,15 +141,27 @@ fn raster_task() {
         1.,
         500,
         500,
-        Vector3::new(0., 1., 4.),
+        Vector3::new(0., 0., 2.),
         primitives::CameraKind::ORTHOGRAPHIC,
         // primitives::CameraKind::PERSPECTIVE,
     );
 
     // global params for rasterization are unifrom and program
-    let uniform = Uniform::new(camera.position, ambient_color, light.position, light.color);
+    let uniform = Uniform::new(
+        camera.position,
+        camera.focal_length,
+        camera.fov,
+        camera.width as f64 / camera.height as f64,
+        ambient_color,
+        light.position,
+        light.color,
+    );
 
-    let program = Program::new(raster::vertex_shader, raster::fragment_shader, raster::blending_shader);
+    let program = Program::new(
+        raster::vertex_shader,
+        raster::fragment_shader,
+        raster::blending_shader,
+    );
 
     // render via rasterization
     raster::rasterize(&mesh, uniform, program, &mut camera.image);
@@ -161,7 +170,6 @@ fn raster_task() {
 }
 
 fn main() {
-    println!("Welcome to rusty ray tracer!");
     // raytracing_task();
     // bvh_task();
     raster_task();

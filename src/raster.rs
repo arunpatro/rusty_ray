@@ -2,7 +2,7 @@ use crate::{
     composites,
     primitives::{self, Camera, Light},
 };
-use nalgebra::{DMatrix, Matrix3, Vector3, Vector4};
+use nalgebra::{DMatrix, Matrix3, Vector3, Vector4, Matrix4};
 #[macro_export]
 
 macro_rules! print_matrix_row_major {
@@ -177,6 +177,9 @@ fn vertex_interpolation(triangle: &ShaderTriangle, bary_coords: nalgebra::Vector
 // this should store some globals that the shader can access
 pub struct Uniform {
     camera_pos: Vector3<f64>,
+    camera_focal_length: f64,
+    camera_fov: f64,
+    camera_aspect_ratio: f64,
     ambient_color: Vector3<f64>,
     light_pos: Vector3<f64>,
     light_color: Vector3<f64>,
@@ -185,12 +188,18 @@ pub struct Uniform {
 impl Uniform {
     pub fn new(
         camera_pos: Vector3<f64>,
+        camera_focal_length: f64,
+        camera_fov: f64,
+        camera_aspect_ratio: f64,
         ambient_color: Vector3<f64>,
         light_pos: Vector3<f64>,
         light_color: Vector3<f64>,
     ) -> Self {
         Self {
             camera_pos,
+            camera_focal_length,
+            camera_fov,
+            camera_aspect_ratio,
             ambient_color,
             light_pos,
             light_color,
@@ -255,10 +264,39 @@ pub fn vertex_shader(vertex: &Vertex, uniform: &Uniform) -> Vertex {
         0., 0., 0., 1.,
     );
 
-    // projection transform: perspective matrix
+    // projection transform: orthographic matrix
+    // double top = uniform.camera_focal_length * tan(uniform.camera_fov / 2);
+        // double bottom = -top;
+        // double right = top * uniform.camera_aspect;
+        // double left = -right;
+        // double near = -uniform.camera_focal_length;
+        // double far = -10;
     
+    let top = uniform.camera_focal_length * (uniform.camera_fov / 2.).tan();
+    let bottom = -top;
+    let right = top * uniform.camera_aspect_ratio;
+    let left = -right;
+    let near = -uniform.camera_focal_length;
+    let far = -10.;
 
-    let final_matrix = camera_matrix * model_matrix;
+    // let left = -1.;
+    // let right = 1.;
+    // let bottom = -1.;
+    // let top = 1.;
+    // let near = 0.;
+    // let far = -10.;
+
+    // let projection_matrix = nalgebra::Matrix4::<f64>::identity();
+    let projection_matrix = nalgebra::Orthographic3::new(left, right, bottom, top, near, far).to_homogeneous();
+    // let projection_matrix = nalgebra::Perspective3::new(
+    //     1.,
+    //     0.3,
+    //     1.,
+    //     10.,
+    // ).to_homogeneous();
+
+
+    let final_matrix = projection_matrix * camera_matrix * model_matrix;
     let new_pos = final_matrix * vertex.position.push(1.);
     let vertex = Vertex {
         position: new_pos.xyz(),
