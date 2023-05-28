@@ -124,8 +124,9 @@ fn bvh_task() {
 fn raster_task() {
     // objects are now only meshes because they need to have the triangles property which other
     // let objects: Vec<composites::Mesh> = vec![composites::Mesh::from_off_file("data/bunny.off")];
-    // let mesh = composites::Mesh::from_off_file("data/test.off");
+    // let mesh = composites::Mesh::from_off_file("data/test2.off");
     let mesh = composites::Mesh::from_off_file("data/bunny.off");
+    // let mesh = composites::Mesh::from_off_file("data/dragon.off");
 
     // let ambient_light = Vector3::new(0.4, 0.4, 0.4);
     let lights: Vec<primitives::Light> = vec![primitives::Light::new(
@@ -136,11 +137,12 @@ fn raster_task() {
     // set the camera
     let mut camera = primitives::Camera::new(
         0.3491,
-        5.,
+        1.,
         500,
         500,
         Vector3::new(0., 0., 2.),
-        primitives::CameraKind::PERSPECTIVE,
+        primitives::CameraKind::ORTHOGRAPHIC,
+        // primitives::CameraKind::PERSPECTIVE,
     );
 
     // render via rasterization
