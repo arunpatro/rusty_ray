@@ -6,33 +6,33 @@ pub enum CameraKind {
 }
 
 pub struct Camera {
-    pub fov: f32,
-    pub focal_length: f32,
+    pub fov: f64,
+    pub focal_length: f64,
     pub width: usize,
     pub height: usize,
-    pub image: DMatrix<Vector4<f32>>,
-    pub position: Vector3<f32>,
+    pub image: DMatrix<Vector4<f64>>,
+    pub position: Vector3<f64>,
     pub kind: CameraKind,
-    screen_origin: Vector3<f32>,
-    x_displacement: Vector3<f32>,
-    y_displacement: Vector3<f32>,
+    screen_origin: Vector3<f64>,
+    x_displacement: Vector3<f64>,
+    y_displacement: Vector3<f64>,
 }
 
 impl Camera {
     pub fn new(
-        fov: f32,
-        focal_length: f32,
+        fov: f64,
+        focal_length: f64,
         width: usize,
         height: usize,
-        position: Vector3<f32>,
+        position: Vector3<f64>,
         kind: CameraKind,
     ) -> Self {
-        let aspect_ratio = width as f32 / height as f32;
+        let aspect_ratio = width as f64 / height as f64;
         let image_y = 2. * (fov / 2.0).tan() * focal_length;
         let image_x = image_y * aspect_ratio;
         let screen_origin = Vector3::new(-image_x, image_y, position.z - focal_length);
-        let x_displacement = Vector3::new(2.0 / width as f32 * image_x, 0., 0.);
-        let y_displacement = Vector3::new(0., -2.0 / height as f32 * image_y, 0.);
+        let x_displacement = Vector3::new(2.0 / width as f64 * image_x, 0., 0.);
+        let y_displacement = Vector3::new(0., -2.0 / height as f64 * image_y, 0.);
 
         Self {
             fov,
@@ -50,8 +50,8 @@ impl Camera {
 
     pub fn ray(&self, i: usize, j: usize) -> Ray {
         let screen_point = self.screen_origin
-            + (i as f32 + 0.5) * self.x_displacement
-            + (j as f32 + 0.5) * self.y_displacement;
+            + (i as f64 + 0.5) * self.x_displacement
+            + (j as f64 + 0.5) * self.y_displacement;
 
         match self.kind {
             CameraKind::ORTHOGRAPHIC => {
@@ -69,34 +69,34 @@ impl Camera {
 }
 
 pub struct Light {
-    pub position: Vector3<f32>,
-    pub color: Vector3<f32>,
+    pub position: Vector3<f64>,
+    pub color: Vector3<f64>,
 }
 
 impl Light {
-    pub fn new(position: Vector3<f32>, color: Vector3<f32>) -> Self {
+    pub fn new(position: Vector3<f64>, color: Vector3<f64>) -> Self {
         Self { position, color }
     }
 }
 
 #[derive(Debug)]
 pub struct Ray {
-    pub origin: Vector3<f32>,
-    pub direction: Vector3<f32>,
+    pub origin: Vector3<f64>,
+    pub direction: Vector3<f64>,
 }
 
 impl Ray {
-    pub fn new(origin: Vector3<f32>, direction: Vector3<f32>) -> Self {
+    pub fn new(origin: Vector3<f64>, direction: Vector3<f64>) -> Self {
         Self { origin, direction }
     }
 }
 pub struct Sphere {
-    pub center: Vector3<f32>,
-    pub radius: f32,
+    pub center: Vector3<f64>,
+    pub radius: f64,
 }
 
 impl Sphere {
-    pub fn new(center: Vector3<f32>, radius: f32) -> Self {
+    pub fn new(center: Vector3<f64>, radius: f64) -> Self {
         Self { center, radius }
     }
 }
@@ -127,38 +127,38 @@ impl Object for Sphere {
         }
     }
 
-    fn normal(&self, point: &Vector3<f32>) -> Vector3<f32> {
+    fn normal(&self, point: &Vector3<f64>) -> Vector3<f64> {
         (point - self.center).normalize()
     }
 }
 
 #[derive(Debug, Clone, Copy)]
 pub struct HitPoint {
-    pub t: f32,
-    pub point: Vector3<f32>,
-    pub normal: Vector3<f32>,
+    pub t: f64,
+    pub point: Vector3<f64>,
+    pub normal: Vector3<f64>,
 }
 
 pub trait Object {
     fn intersects(&self, ray: &Ray) -> Option<HitPoint>;
-    fn normal(&self, point: &Vector3<f32>) -> Vector3<f32>;
+    fn normal(&self, point: &Vector3<f64>) -> Vector3<f64>;
 }
 
 pub struct Material {
-    pub diffuse_color: Vector3<f32>,
-    pub specular_color: Vector3<f32>,
-    pub specular_exponent: f32,
-    pub reflection_color: Vector3<f32>,
-    pub refraction_color: Vector3<f32>,
+    pub diffuse_color: Vector3<f64>,
+    pub specular_color: Vector3<f64>,
+    pub specular_exponent: f64,
+    pub reflection_color: Vector3<f64>,
+    pub refraction_color: Vector3<f64>,
 }
 
 impl Material {
     pub fn new(
-        diffuse_color: Vector3<f32>,
-        specular_color: Vector3<f32>,
-        specular_exponent: f32,
-        reflection_color: Vector3<f32>,
-        refraction_color: Vector3<f32>,
+        diffuse_color: Vector3<f64>,
+        specular_color: Vector3<f64>,
+        specular_exponent: f64,
+        reflection_color: Vector3<f64>,
+        refraction_color: Vector3<f64>,
     ) -> Self {
         Self {
             diffuse_color,
@@ -171,13 +171,13 @@ impl Material {
 }
 
 pub struct Parallelogram {
-    pub point1: Vector3<f32>,
-    pub point2: Vector3<f32>,
-    pub point3: Vector3<f32>,
+    pub point1: Vector3<f64>,
+    pub point2: Vector3<f64>,
+    pub point3: Vector3<f64>,
 }
 
 impl Parallelogram {
-    pub fn new(point1: Vector3<f32>, point2: Vector3<f32>, point3: Vector3<f32>) -> Self {
+    pub fn new(point1: Vector3<f64>, point2: Vector3<f64>, point3: Vector3<f64>) -> Self {
         Self {
             point1,
             point2,
@@ -210,7 +210,7 @@ impl Object for Parallelogram {
         }
     }
 
-    fn normal(&self, _point: &Vector3<f32>) -> Vector3<f32> {
+    fn normal(&self, _point: &Vector3<f64>) -> Vector3<f64> {
         (self.point2 - self.point1)
             .cross(&(self.point3 - self.point1))
             .normalize()
@@ -219,13 +219,13 @@ impl Object for Parallelogram {
 
 #[derive(Debug, Clone, Copy)]
 pub struct Triangle {
-    pub point1: Vector3<f32>,
-    pub point2: Vector3<f32>,
-    pub point3: Vector3<f32>,
+    pub point1: Vector3<f64>,
+    pub point2: Vector3<f64>,
+    pub point3: Vector3<f64>,
 }
 
 impl Triangle {
-    pub fn new(point1: Vector3<f32>, point2: Vector3<f32>, point3: Vector3<f32>) -> Self {
+    pub fn new(point1: Vector3<f64>, point2: Vector3<f64>, point3: Vector3<f64>) -> Self {
         Self {
             point1,
             point2,
@@ -233,11 +233,11 @@ impl Triangle {
         }
     }
 
-    pub fn centroid(&self) -> Vector3<f32> {
+    pub fn centroid(&self) -> Vector3<f64> {
         (self.point1 + self.point2 + self.point3) / 3.
     }
 
-    pub fn normal(&self) -> Vector3<f32> {
+    pub fn normal(&self) -> Vector3<f64> {
         (self.point2 - self.point1)
             .cross(&(self.point3 - self.point1))
             .normalize()
@@ -275,7 +275,7 @@ impl Object for Triangle {
         }
     }
 
-    fn normal(&self, _point: &Vector3<f32>) -> Vector3<f32> {
+    fn normal(&self, _point: &Vector3<f64>) -> Vector3<f64> {
         self.normal()
     }
 }
@@ -283,14 +283,14 @@ impl Object for Triangle {
 pub struct Scene {
     pub objects: Vec<Box<dyn Object>>,
     pub lights: Vec<Light>,
-    pub ambient_color: Vector3<f32>,
+    pub ambient_color: Vector3<f64>,
 }
 
 impl Scene {
     pub fn new(
         objects: Vec<Box<dyn Object>>,
         lights: Vec<Light>,
-        ambient_color: Vector3<f32>,
+        ambient_color: Vector3<f64>,
     ) -> Self {
         Self {
             objects,

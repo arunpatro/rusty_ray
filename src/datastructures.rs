@@ -2,25 +2,25 @@ use crate::primitives::{Ray, Triangle};
 use nalgebra::Vector3;
 
 pub struct AlignedBox3d {
-    pub min: Vector3<f32>,
-    pub max: Vector3<f32>,
+    pub min: Vector3<f64>,
+    pub max: Vector3<f64>,
 }
 
 impl Default for AlignedBox3d {
     fn default() -> Self {
         Self {
-            min: Vector3::new(f32::INFINITY, f32::INFINITY, f32::INFINITY),
-            max: Vector3::new(f32::NEG_INFINITY, f32::NEG_INFINITY, f32::NEG_INFINITY),
+            min: Vector3::new(f64::INFINITY, f64::INFINITY, f64::INFINITY),
+            max: Vector3::new(f64::NEG_INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY),
         }
     }
 }
 
 impl AlignedBox3d {
-    pub fn new(min: Vector3<f32>, max: Vector3<f32>) -> Self {
+    pub fn new(min: Vector3<f64>, max: Vector3<f64>) -> Self {
         Self { min, max }
     }
 
-    pub fn extend(&mut self, point: Vector3<f32>) {
+    pub fn extend(&mut self, point: Vector3<f64>) {
         self.min = Vector3::new(
             self.min.x.min(point.x),
             self.min.y.min(point.y),
@@ -39,7 +39,7 @@ impl AlignedBox3d {
         self.extend(triangle.point3);
     }
 
-    pub fn contains(&self, point: Vector3<f32>) -> bool {
+    pub fn contains(&self, point: Vector3<f64>) -> bool {
         let check_dim = |dim, min, max| point[dim] >= min && point[dim] <= max;
 
         check_dim(0, self.min.x, self.max.x)

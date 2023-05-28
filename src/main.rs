@@ -1,6 +1,10 @@
 use kdam::tqdm;
 use nalgebra::Vector3;
-use rusty_ray::{composites, image_utils, primitives, raster, utils};
+use rusty_ray::{
+    composites, image_utils, primitives,
+    raster::{self, Program, Uniform},
+    utils,
+};
 
 fn raytracing_task() {
     // set the objects
@@ -122,35 +126,47 @@ fn bvh_task() {
 }
 
 fn raster_task() {
-    // objects are now only meshes because they need to have the triangles property which other
-    // let objects: Vec<composites::Mesh> = vec![composites::Mesh::from_off_file("data/bunny.off")];
-    // let mesh = composites::Mesh::from_off_file("data/test.off");
-    let mesh = composites::Mesh::from_off_file("data/bunny.off");
+    // let mesh = composites::Mesh::from_off_file("data/bunny.off");
+    let mesh = composites::Mesh::from_off_file("data/dragon.off");
 
-    // let ambient_light = Vector3::new(0.4, 0.4, 0.4);
-    let lights: Vec<primitives::Light> = vec![primitives::Light::new(
-        Vector3::new(-1., 1., 0.),
-        Vector3::new(0.2, 0.5, 0.1),
-    )];
+    let ambient_color = Vector3::new(0.2, 0.2, 0.2);
+    let light = primitives::Light::new(Vector3::new(-1., 1., 3.), Vector3::new(0.2, 0.5, 0.1));
 
     // set the camera
     let mut camera = primitives::Camera::new(
-        0.3491,
-        5.,
+        0.8,
+        1.,
         500,
         500,
         Vector3::new(0., 0., 2.),
-        primitives::CameraKind::PERSPECTIVE,
+        primitives::CameraKind::ORTHOGRAPHIC,
+        // primitives::CameraKind::PERSPECTIVE,
+    );
+
+    // global params for rasterization are unifrom and program
+    let uniform = Uniform::new(
+        camera.position,
+        camera.focal_length,
+        camera.fov,
+        camera.width as f64 / camera.height as f64,
+        ambient_color,
+        light.position,
+        light.color,
+    );
+
+    let program = Program::new(
+        raster::vertex_shader,
+        raster::fragment_shader,
+        raster::blending_shader,
     );
 
     // render via rasterization
-    raster::rasterize(&mesh, &mut camera, &lights);
+    raster::rasterize(&mesh, uniform, program, &mut camera.image);
 
     image_utils::save_as_png(camera, "raster.png");
 }
 
 fn main() {
-    println!("Welcome to rusty ray tracer!");
     // raytracing_task();
     // bvh_task();
     raster_task();

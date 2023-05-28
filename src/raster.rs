@@ -1,26 +1,50 @@
-use crate::{composites, primitives};
-use nalgebra::{DMatrix, Matrix3, Vector3, Vector4};
+use crate::{
+    composites,
+    primitives::{self, Camera, Light},
+};
+use nalgebra::{DMatrix, Matrix3, Vector3, Vector4, Matrix4};
 #[macro_export]
 
 macro_rules! print_matrix_row_major {
     ($var_name:expr, $matrix:expr) => {
-        println!("Matrix {}:", $var_name);
-        for row in 0..$matrix.nrows() {
-            for col in 0..$matrix.ncols() {
-                print!(" > {:.3} ", $matrix[(row, col)]);
-            }
-            println!();
-        }
+        println!(
+            "{}: {:.4}, {:.4}, {:.4}",
+            $var_name,
+            $matrix[(0, 0)],
+            $matrix[(0, 1)],
+            $matrix[(0, 2)]
+        );
+        println!(
+            "   {:.4}, {:.4}, {:.4}",
+            $matrix[(1, 0)],
+            $matrix[(1, 1)],
+            $matrix[(1, 2)]
+        );
+        println!(
+            "   {:.4}, {:.4}, {:.4}",
+            $matrix[(2, 0)],
+            $matrix[(2, 1)],
+            $matrix[(2, 2)]
+        );
     };
 }
 
-pub fn rasterize(mesh: &composites::Mesh, camera: &mut primitives::Camera, lights: &[primitives::Light]) {
+pub fn rasterize(
+    mesh: &composites::Mesh,
+    uniform: Uniform,
+    program: Program,
+    frame_buffer: &mut DMatrix<Vector4<f64>>,
+) {
     // init the meta triangles
     // using literal construction is more verbose than implementing the new constructor
-    let frame_buffer = &mut camera.image;
-    let mut z_buffer = DMatrix::from_element(camera.width, camera.height, f32::NEG_INFINITY);
+    // let frame_buffer = &mut camera.image;
+    let mut z_buffer = DMatrix::from_element(
+        frame_buffer.nrows(),
+        frame_buffer.ncols(),
+        f64::NEG_INFINITY,
+    );
     let mut triangles: Vec<ShaderTriangle> = Vec::new();
-    for triangle in &mesh.triangles {
+    for (i, triangle) in mesh.triangles.iter().enumerate() {
         let normal = triangle.normal();
         let v0 = Vertex {
             position: triangle.point1,
@@ -34,6 +58,7 @@ pub fn rasterize(mesh: &composites::Mesh, camera: &mut primitives::Camera, light
             position: triangle.point3,
             normal: normal,
         };
+
         triangles.push(ShaderTriangle {
             v0: v0,
             v1: v1,
@@ -43,76 +68,96 @@ pub fn rasterize(mesh: &composites::Mesh, camera: &mut primitives::Camera, light
 
     // run the vertex shader, modify the vertices of the triangles
     for triangle in &mut triangles {
-        triangle.v0 = vertex_shader(&triangle.v0);
-        triangle.v1 = vertex_shader(&triangle.v1);
-        triangle.v2 = vertex_shader(&triangle.v2);
+        triangle.v0 = vertex_shader(&triangle.v0, &uniform);
+        triangle.v1 = vertex_shader(&triangle.v1, &uniform);
+        triangle.v2 = vertex_shader(&triangle.v2, &uniform);
     }
 
     // rasterize the triangles by running the fragment shader on every pixel
     // for every triangle, find pixels that are inside the bounding box of the triangle
     // compute the barycentric coordinates of the pixel, its interpolated attributes
     // and run the fragment shader on it
-    for triangle in &triangles {
+    for (i, triangle) in triangles.iter().enumerate() {
         // Collect coordinates into a matrix and convert to canonical representation
         let mut p = nalgebra::Matrix3::new(
             triangle.v0.position.x,
-            triangle.v1.position.x,
-            triangle.v2.position.x,
             triangle.v0.position.y,
+            triangle.v0.position.z,
+            triangle.v1.position.x,
             triangle.v1.position.y,
+            triangle.v1.position.z,
+            triangle.v2.position.x,
             triangle.v2.position.y,
-            1.0,
-            1.0,
-            1.0,
+            triangle.v2.position.z,
         );
 
-        // println!(" p {:?} ", p);
-        // Scale and translate columns 0 and 1
-        p.row_mut(0)
-            .iter_mut()
-            .for_each(|x| *x = (*x + 1.) / 2. * camera.width as f32);
-        p.row_mut(1)
-            .iter_mut()
-            .for_each(|y| *y = (*y + 1.) / 2. * camera.height as f32);
+        // print_matrix_row_major!("<p", p);
 
-        let lx = p.row(0).min() as usize;
-        let ly = p.row(1).min() as usize;
-        let ux = p.row(0).max() as usize;
-        let uy = p.row(1).max() as usize;
+        // Coordinates are in -1..1, rescale to pixel size (x,y only)
+        // TODO row_mut gives wrong ans, column mut works, really confused about this notation!
+        p.column_mut(0)
+            .iter_mut()
+            .for_each(|x| *x = (*x + 1.) / 2. * frame_buffer.ncols() as f64);
+        p.column_mut(1)
+            .iter_mut()
+            .for_each(|y| *y = (*y + 1.) / 2. * frame_buffer.nrows() as f64);
+
+        let lx = p.column(0).min().floor() as usize;
+        let ly = p.column(1).min().floor() as usize;
+        let ux = p.column(0).max().ceil() as usize;
+        let uy = p.column(1).max().ceil() as usize;
 
         // clamp the bounding box to the frame buffer
-        let lx = lx.max(0).min(camera.width - 1);
-        let ly = ly.max(0).min(camera.height - 1);
-        let ux = ux.max(0).min(camera.width - 1);
-        let uy = uy.max(0).min(camera.height - 1);
+        let lx = lx.max(0).min(frame_buffer.ncols() - 1);
+        let ly = ly.max(0).min(frame_buffer.nrows() - 1);
+        let ux = ux.max(0).min(frame_buffer.ncols() - 1);
+        let uy = uy.max(0).min(frame_buffer.nrows() - 1);
 
-        // (lx, ly, ux, uy)
-        // print_matrix_row_major!("p_new", p);
-        // println!("{} {} {} {}", lx, ly, ux, uy);
+        // print_matrix_row_major!("p", p);
+        // println!("lx: {}, ly: {}, ux: {}, uy: {}", lx, ly, ux, uy);
 
         // Build the implicit triangle representation from matrix p
-        let matrix_A = p;
-        let matrix_A_inv = matrix_A.try_inverse().unwrap();
+        // and set the last row to 1
+        let mut matrix_A = p.transpose();
+        matrix_A[(2, 0)] = 1.;
+        matrix_A[(2, 1)] = 1.;
+        matrix_A[(2, 2)] = 1.;
 
-        for i in lx..ux {
-            for j in ly..uy {
-                let pixel = nalgebra::Vector3::new(i as f32 + 0.5, j as f32 + 0.5, 1.);
+        let inv = matrix_A.try_inverse();
+        let matrix_A_inv = match inv {
+            Some(inv) => inv,
+            None => {
+                // for dragon two times this happens - 504336, 533340
+                continue;
+            }
+        };
+        // this is the same as using adjugate logic, differs from cpp eigen!!
+
+        // print_matrix_row_major!("A", matrix_A);
+        // print_matrix_row_major!("Ai", matrix_A_inv);
+
+        for i in lx..=ux {
+            for j in ly..=uy {
+                let pixel = nalgebra::Vector3::new(i as f64 + 0.5, j as f64 + 0.5, 1.);
                 let bary_coords = matrix_A_inv * pixel;
-                let v = vertex_interpolation(&triangle, bary_coords);
-                if i == 250 && j == 240 {
-                    // println!("i {} j {}", i, j);
-                    // println!("baryx {:?}", bary_coords);
-                    // println!("pixel {:?}", pixel);
-                    // print_matrix_row_major!("mA", mA);
-                    // print_matrix_row_major!("mAi", mAi);
-                    // println!("v {:?}", v);
-                }
+                // println!("pixel: {:.4}, {:.4}, {:.4}", pixel.x, pixel.y, pixel.z);
+                // println!(
+                //     "i: {}, j: {}, b: {:.4}, {:.4}, {:.4}",
+                //     i, j, bary_coords[0], bary_coords[1], bary_coords[2]
+                // );
                 if bary_coords.min() >= 0. {
+                    let v = vertex_interpolation(&triangle, bary_coords);
+                    // println!(
+                    //     "va: {:.4}, {:.4}, {:.4}",
+                    //     v.position.x, v.position.y, v.position.z
+                    // );
                     // only render in the biunit cube
-                    if v.position.z >= -1. && v.position.z <= 1. {
-                        let fragment = fragment_shader(&v, lights);
+                    if v.position.z <= 1. {
+                        // if v.position.z >= -1. && v.position.z <= 1. {
+                        let fragment = fragment_shader(&v, &uniform);
                         // let blend = blending_shader(&fragment, camera.image[(i, j)]);
-                        let (blend, new_z) = blending_shader(&fragment, frame_buffer[(i, j)], z_buffer[(i, j)]);
+                        let (blend, new_z) =
+                            blending_shader(&fragment, frame_buffer[(i, j)], z_buffer[(i, j)]);
                         frame_buffer[(i, j)] = blend;
                         z_buffer[(i, j)] = new_z;
                     }
@@ -124,7 +169,7 @@ pub fn rasterize(mesh: &composites::Mesh, camera: &mut primitives::Camera, light
     }
 }
 
-fn vertex_interpolation(triangle: &ShaderTriangle, bary_coords: nalgebra::Vector3<f32>) -> Vertex {
+fn vertex_interpolation(triangle: &ShaderTriangle, bary_coords: nalgebra::Vector3<f64>) -> Vertex {
     let vertex = Vertex {
         position: triangle.v0.position * bary_coords.x
             + triangle.v1.position * bary_coords.y
@@ -138,6 +183,35 @@ fn vertex_interpolation(triangle: &ShaderTriangle, bary_coords: nalgebra::Vector
 
 // this should store some globals that the shader can access
 pub struct Uniform {
+    camera_pos: Vector3<f64>,
+    camera_focal_length: f64,
+    camera_fov: f64,
+    camera_aspect_ratio: f64,
+    ambient_color: Vector3<f64>,
+    light_pos: Vector3<f64>,
+    light_color: Vector3<f64>,
+}
+
+impl Uniform {
+    pub fn new(
+        camera_pos: Vector3<f64>,
+        camera_focal_length: f64,
+        camera_fov: f64,
+        camera_aspect_ratio: f64,
+        ambient_color: Vector3<f64>,
+        light_pos: Vector3<f64>,
+        light_color: Vector3<f64>,
+    ) -> Self {
+        Self {
+            camera_pos,
+            camera_focal_length,
+            camera_fov,
+            camera_aspect_ratio,
+            ambient_color,
+            light_pos,
+            light_color,
+        }
+    }
 }
 
 // this is required for the rasterization algorithm,
@@ -152,27 +226,27 @@ pub struct ShaderTriangle {
 
 #[derive(Debug)]
 pub struct Vertex {
-    pub position: nalgebra::Vector3<f32>,
-    pub normal: nalgebra::Vector3<f32>,
+    pub position: nalgebra::Vector3<f64>,
+    pub normal: nalgebra::Vector3<f64>,
 }
 
 pub struct Fragment {
-    pub position: nalgebra::Vector3<f32>,
-    pub color: nalgebra::Vector3<f32>,
+    pub position: nalgebra::Vector3<f64>,
+    pub color: nalgebra::Vector3<f64>,
 }
 
 pub struct Program {
-    pub vertex_shader: fn(&Vertex) -> Vertex,
-    pub fragment_shader: fn(&Vertex, &[primitives::Light]) -> Fragment,
-    pub blending_shader: fn(&Fragment, &Fragment) -> Fragment,
+    pub vertex_shader: fn(vertex: &Vertex, uniform: &Uniform) -> Vertex,
+    pub fragment_shader: fn(vertex: &Vertex, uniform: &Uniform) -> Fragment,
+    pub blending_shader: fn(&Fragment, Vector4<f64>, f64) -> (Vector4<f64>, f64),
 }
 
 // not sure where to initialize this, or make it default
 impl Program {
     pub fn new(
-        vertex_shader: fn(&Vertex) -> Vertex,
-        fragment_shader: fn(&Vertex, &[primitives::Light]) -> Fragment,
-        blending_shader: fn(&Fragment, &Fragment) -> Fragment,
+        vertex_shader: fn(&Vertex, &Uniform) -> Vertex,
+        fragment_shader: fn(&Vertex, &Uniform) -> Fragment,
+        blending_shader: fn(&Fragment, Vector4<f64>, f64) -> (Vector4<f64>, f64),
     ) -> Program {
         Program {
             vertex_shader,
@@ -183,23 +257,70 @@ impl Program {
 }
 
 // TODO provide the shader definitions in the main program
-fn vertex_shader(vertex: &Vertex) -> Vertex {
+// for now here
+pub fn vertex_shader(vertex: &Vertex, uniform: &Uniform) -> Vertex {
+
+    // model transform: model matrix
+    let model_matrix = nalgebra::Matrix4::identity();
+
+    // view transform: camera matrix
+    let camera_matrix = nalgebra::Matrix4::new(
+        1., 0., 0., -uniform.camera_pos.x,
+        0., 1., 0., -uniform.camera_pos.y,
+        0., 0., 1., -uniform.camera_pos.z,
+        0., 0., 0., 1.,
+    );
+
+    // projection transform: orthographic matrix
+    // double top = uniform.camera_focal_length * tan(uniform.camera_fov / 2);
+        // double bottom = -top;
+        // double right = top * uniform.camera_aspect;
+        // double left = -right;
+        // double near = -uniform.camera_focal_length;
+        // double far = -10;
+    
+    let top = uniform.camera_focal_length * (uniform.camera_fov / 2.).tan();
+    let bottom = -top;
+    let right = top * uniform.camera_aspect_ratio;
+    let left = -right;
+    let near = -uniform.camera_focal_length;
+    let far = -10.;
+
+    // let left = -1.;
+    // let right = 1.;
+    // let bottom = -1.;
+    // let top = 1.;
+    // let near = 0.;
+    // let far = -10.;
+
+    // let projection_matrix = nalgebra::Matrix4::<f64>::identity();
+    let projection_matrix = nalgebra::Orthographic3::new(left, right, bottom, top, near, far).to_homogeneous();
+    // let projection_matrix = nalgebra::Perspective3::new(
+    //     1.,
+    //     0.3,
+    //     1.,
+    //     10.,
+    // ).to_homogeneous();
+
+
+    let final_matrix = projection_matrix * camera_matrix * model_matrix;
+    let new_pos = final_matrix * vertex.position.push(1.);
     let vertex = Vertex {
-        position: vertex.position,
+        position: new_pos.xyz(),
         normal: vertex.normal,
     };
     vertex
 }
 
-fn fragment_shader(vertex: &Vertex, lights: &[primitives::Light]) -> Fragment {
-    let light_direction = (lights[0].position - vertex.position).normalize();
+pub fn fragment_shader(vertex: &Vertex, uniform: &Uniform) -> Fragment {
+    let light_direction = (uniform.light_pos - vertex.position).normalize();
     let mut normal = vertex.normal.normalize();
     if light_direction.dot(&normal) < 0. {
         normal = -normal;
     }
     let diffuse = light_direction.dot(&normal).max(0.);
-    let diffuse_color = diffuse * lights[0].color;
-    let ambient_color = Vector3::new(0.3, 0.3, 0.3);
+    let diffuse_color = diffuse * uniform.light_color;
+    let ambient_color = uniform.ambient_color;
 
     let fragment = Fragment {
         position: vertex.position,
@@ -208,7 +329,11 @@ fn fragment_shader(vertex: &Vertex, lights: &[primitives::Light]) -> Fragment {
     fragment
 }
 
-fn blending_shader(fragment: &Fragment, old_color: Vector4<f32>, old_z: f32) -> (Vector4<f32>, f32) {
+pub fn blending_shader(
+    fragment: &Fragment,
+    old_color: Vector4<f64>,
+    old_z: f64,
+) -> (Vector4<f64>, f64) {
     let color = Vector4::new(fragment.color.x, fragment.color.y, fragment.color.z, 1.);
     let z = fragment.position.z;
     if z > old_z {
