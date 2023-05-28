@@ -45,9 +45,6 @@ pub fn rasterize(
     );
     let mut triangles: Vec<ShaderTriangle> = Vec::new();
     for (i, triangle) in mesh.triangles.iter().enumerate() {
-        // if i == 25 {
-        //     println!("T> {}:", i);
-        // }
         let normal = triangle.normal();
         let v0 = Vertex {
             position: triangle.point1,
@@ -61,20 +58,6 @@ pub fn rasterize(
             position: triangle.point3,
             normal: normal,
         };
-        // print the new vertices like this
-        // this seems correct
-        // println!(
-        //     "v[{}]: {:.4}, {:.4}, {:.4}",
-        //     3*i, v0.position.x, v0.position.y, v0.position.z
-        // );
-        // println!(
-        //     "v[{}]: {:.4}, {:.4}, {:.4}",
-        //     3*i+1, v1.position.x, v1.position.y, v1.position.z
-        // );
-        // println!(
-        //     "v[{}]: {:.4}, {:.4}, {:.4}",
-        //     3*i+2, v2.position.x, v2.position.y, v2.position.z
-        // );
 
         triangles.push(ShaderTriangle {
             v0: v0,
@@ -95,7 +78,6 @@ pub fn rasterize(
     // compute the barycentric coordinates of the pixel, its interpolated attributes
     // and run the fragment shader on it
     for (i, triangle) in triangles.iter().enumerate() {
-        // println!("Raster T: {}", i);
         // Collect coordinates into a matrix and convert to canonical representation
         let mut p = nalgebra::Matrix3::new(
             triangle.v0.position.x,
@@ -132,12 +114,11 @@ pub fn rasterize(
         let uy = uy.max(0).min(frame_buffer.nrows() - 1);
 
         // print_matrix_row_major!("p", p);
-
         // println!("lx: {}, ly: {}, ux: {}, uy: {}", lx, ly, ux, uy);
 
         // Build the implicit triangle representation from matrix p
+        // and set the last row to 1
         let mut matrix_A = p.transpose();
-        // set the last row to 1
         matrix_A[(2, 0)] = 1.;
         matrix_A[(2, 1)] = 1.;
         matrix_A[(2, 2)] = 1.;
@@ -148,11 +129,6 @@ pub fn rasterize(
         // print_matrix_row_major!("A", matrix_A);
         // print_matrix_row_major!("Ai", matrix_A_inv);
 
-        // // print the matrix A in row major
-        // std::printf("A: %f, %f, %f\n", A(0,0), A(0,1), A(0,2));
-        // std::printf("   %f, %f, %f\n", A(1,0), A(1,1), A(1,2));
-        // std::printf("   %f, %f, %f\n", A(2,0), A(2,1), A(2,2));
-
         for i in lx..=ux {
             for j in ly..=uy {
                 let pixel = nalgebra::Vector3::new(i as f64 + 0.5, j as f64 + 0.5, 1.);
@@ -162,14 +138,6 @@ pub fn rasterize(
                 //     "i: {}, j: {}, b: {:.4}, {:.4}, {:.4}",
                 //     i, j, bary_coords[0], bary_coords[1], bary_coords[2]
                 // );
-                // if i == 250 && j == 240 {
-                // println!("i {} j {}", i, j);
-                // println!("baryx {:?}", bary_coords);
-                // println!("pixel {:?}", pixel);
-                // print_matrix_row_major!("mA", mA);
-                // print_matrix_row_major!("mAi", mAi);
-                // println!("v {:?}", v);
-                // }
                 if bary_coords.min() >= 0. {
                     let v = vertex_interpolation(&triangle, bary_coords);
                     // println!(
@@ -286,6 +254,9 @@ pub fn vertex_shader(vertex: &Vertex, uniform: &Uniform) -> Vertex {
         0., 0., 1., -uniform.camera_pos.z,
         0., 0., 0., 1.,
     );
+
+    // projection transform: perspective matrix
+    
 
     let final_matrix = camera_matrix * model_matrix;
     let new_pos = final_matrix * vertex.position.push(1.);
