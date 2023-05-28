@@ -129,15 +129,15 @@ fn raster_task() {
     // objects are now only meshes because they need to have the triangles property which other
     // let objects: Vec<composites::Mesh> = vec![composites::Mesh::from_off_file("data/bunny.off")];
     // let mesh = composites::Mesh::from_off_file("data/test2.off");
-    let mesh = composites::Mesh::from_off_file("data/bunny.off");
-    // let mesh = composites::Mesh::from_off_file("data/dragon.off");
+    // let mesh = composites::Mesh::from_off_file("data/bunny.off");
+    let mesh = composites::Mesh::from_off_file("data/dragon.off");
 
     let ambient_color = Vector3::new(0.2, 0.2, 0.2);
     let light = primitives::Light::new(Vector3::new(-1., 1., 3.), Vector3::new(0.2, 0.5, 0.1));
 
     // set the camera
     let mut camera = primitives::Camera::new(
-        0.3491,
+        0.8,
         1.,
         500,
         500,

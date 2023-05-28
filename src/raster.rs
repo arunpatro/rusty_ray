@@ -123,7 +123,14 @@ pub fn rasterize(
         matrix_A[(2, 1)] = 1.;
         matrix_A[(2, 2)] = 1.;
 
-        let matrix_A_inv = matrix_A.try_inverse().unwrap();
+        let inv = matrix_A.try_inverse();
+        let matrix_A_inv = match inv {
+            Some(inv) => inv,
+            None => {
+                // for dragon two times this happens - 504336, 533340
+                continue;
+            }
+        };
         // this is the same as using adjugate logic, differs from cpp eigen!!
 
         // print_matrix_row_major!("A", matrix_A);
