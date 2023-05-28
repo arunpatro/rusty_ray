@@ -144,7 +144,7 @@ fn raster_task() {
         1.,
         500,
         500,
-        Vector3::new(0., 0., 2.),
+        Vector3::new(0., 1., 4.),
         primitives::CameraKind::ORTHOGRAPHIC,
         // primitives::CameraKind::PERSPECTIVE,
     );

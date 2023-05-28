@@ -133,7 +133,7 @@ pub fn rasterize(
 
         // print_matrix_row_major!("p", p);
 
-        println!("lx: {}, ly: {}, ux: {}, uy: {}", lx, ly, ux, uy);
+        // println!("lx: {}, ly: {}, ux: {}, uy: {}", lx, ly, ux, uy);
 
         // Build the implicit triangle representation from matrix p
         let mut matrix_A = p.transpose();
@@ -145,8 +145,8 @@ pub fn rasterize(
         let matrix_A_inv = matrix_A.try_inverse().unwrap();
         // this is the same as using adjugate logic, differs from cpp eigen!!
 
-        print_matrix_row_major!("A", matrix_A);
-        print_matrix_row_major!("Ai", matrix_A_inv);
+        // print_matrix_row_major!("A", matrix_A);
+        // print_matrix_row_major!("Ai", matrix_A_inv);
 
         // // print the matrix A in row major
         // std::printf("A: %f, %f, %f\n", A(0,0), A(0,1), A(0,2));
@@ -158,10 +158,10 @@ pub fn rasterize(
                 let pixel = nalgebra::Vector3::new(i as f64 + 0.5, j as f64 + 0.5, 1.);
                 let bary_coords = matrix_A_inv * pixel;
                 // println!("pixel: {:.4}, {:.4}, {:.4}", pixel.x, pixel.y, pixel.z);
-                println!(
-                    "i: {}, j: {}, b: {:.4}, {:.4}, {:.4}",
-                    i, j, bary_coords[0], bary_coords[1], bary_coords[2]
-                );
+                // println!(
+                //     "i: {}, j: {}, b: {:.4}, {:.4}, {:.4}",
+                //     i, j, bary_coords[0], bary_coords[1], bary_coords[2]
+                // );
                 // if i == 250 && j == 240 {
                 // println!("i {} j {}", i, j);
                 // println!("baryx {:?}", bary_coords);
@@ -172,12 +172,13 @@ pub fn rasterize(
                 // }
                 if bary_coords.min() >= 0. {
                     let v = vertex_interpolation(&triangle, bary_coords);
-                    println!(
-                        "va: {:.4}, {:.4}, {:.4}",
-                        v.position.x, v.position.y, v.position.z
-                    );
+                    // println!(
+                    //     "va: {:.4}, {:.4}, {:.4}",
+                    //     v.position.x, v.position.y, v.position.z
+                    // );
                     // only render in the biunit cube
-                    if v.position.z >= -1. && v.position.z <= 1. {
+                    if v.position.z <= 1. {
+                        // if v.position.z >= -1. && v.position.z <= 1. {
                         let fragment = fragment_shader(&v, &uniform);
                         // let blend = blending_shader(&fragment, camera.image[(i, j)]);
                         let (blend, new_z) =
@@ -274,8 +275,22 @@ impl Program {
 // TODO provide the shader definitions in the main program
 // for now here
 pub fn vertex_shader(vertex: &Vertex, uniform: &Uniform) -> Vertex {
+
+    // model transform: model matrix
+    let model_matrix = nalgebra::Matrix4::identity();
+
+    // view transform: camera matrix
+    let camera_matrix = nalgebra::Matrix4::new(
+        1., 0., 0., -uniform.camera_pos.x,
+        0., 1., 0., -uniform.camera_pos.y,
+        0., 0., 1., -uniform.camera_pos.z,
+        0., 0., 0., 1.,
+    );
+
+    let final_matrix = camera_matrix * model_matrix;
+    let new_pos = final_matrix * vertex.position.push(1.);
     let vertex = Vertex {
-        position: vertex.position,
+        position: new_pos.xyz(),
         normal: vertex.normal,
     };
     vertex
