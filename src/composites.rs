@@ -35,7 +35,7 @@ impl Mesh {
         for _ in 0..num_vertices {
             let mut line = String::new();
             reader.read_line(&mut line).unwrap();
-            let vertex: Vec<f32> = line
+            let vertex: Vec<f64> = line
                 .split_ascii_whitespace()
                 .map(|s| s.parse().unwrap())
                 .collect();
@@ -66,7 +66,7 @@ impl Mesh {
         let mut stack = vec![node];
 
         let mut closest_hit_point = None;
-        let mut closest_t = f32::INFINITY;
+        let mut closest_t = f64::INFINITY;
 
         while let Some(node) = stack.pop() {
             if !node.bbox.intersects(ray) {
@@ -126,7 +126,7 @@ impl Object for Mesh {
         //     .min_by(|a, b| a.t.partial_cmp(&b.t).unwrap_or(Ordering::Equal))
     }
 
-    fn normal(&self, point: &Vector3<f32>) -> Vector3<f32> {
+    fn normal(&self, point: &Vector3<f64>) -> Vector3<f64> {
         // this is not correct, because its very cumbersome to calculate which triangle the point is in and then get the normal from that triangle
         // we can calculate baricentric coordinates to get the triangle, and accelerate with a BVH
         Vector3::new(0., 0., 0.)

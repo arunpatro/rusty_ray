@@ -28,7 +28,7 @@ pub fn find_closest_point(
 // check if the light is visible
 pub fn is_light_visible(
     light: &primitives::Light,
-    point: &Vector3<f32>,
+    point: &Vector3<f64>,
     objects: &Vec<Box<dyn primitives::Object>>,
 ) -> bool {
     let light_ray = Ray::new(*point, (light.position - point).normalize());
@@ -48,7 +48,7 @@ pub fn shoot_ray(
     scene: &Scene,
     material: &primitives::Material,
     max_bounce: usize,
-) -> Vector4<f32> {
+) -> Vector4<f64> {
     let ans = find_closest_point(ray, &scene.objects);
     match ans {
         Some((index, hit_point)) => {
@@ -65,8 +65,8 @@ pub fn shoot_ray(
                 // if index == 4 {
                 // Compute UV coodinates for the point on the sphere
                 // let xyz = intersection - Vector3::new(-2., 0.4, 1.);
-                // let tu = (xyz.z / 1. ).acos() / std::f32::consts::PI;
-                // let tv = (std::f32::consts::PI + xyz.y.atan2(xyz.x)) / (2. * std::f32::consts::PI);
+                // let tu = (xyz.z / 1. ).acos() / std::f64::consts::PI;
+                // let tv = (std::f64::consts::PI + xyz.y.atan2(xyz.x)) / (2. * std::f64::consts::PI);
                 // diffuse_color = procedural_texture(tu, tv);
                 // }
 

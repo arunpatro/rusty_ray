@@ -33,7 +33,7 @@ pub fn rasterize(
     mesh: &composites::Mesh,
     uniform: Uniform,
     program: Program,
-    frame_buffer: &mut DMatrix<Vector4<f32>>,
+    frame_buffer: &mut DMatrix<Vector4<f64>>,
 ) {
     // init the meta triangles
     // using literal construction is more verbose than implementing the new constructor
@@ -41,7 +41,7 @@ pub fn rasterize(
     let mut z_buffer = DMatrix::from_element(
         frame_buffer.nrows(),
         frame_buffer.ncols(),
-        f32::NEG_INFINITY,
+        f64::NEG_INFINITY,
     );
     let mut triangles: Vec<ShaderTriangle> = Vec::new();
     for (i, triangle) in mesh.triangles.iter().enumerate() {
@@ -115,10 +115,10 @@ pub fn rasterize(
         // TODO row_mut gives wrong ans, column mut works, really confused about this notation!
         p.column_mut(0)
             .iter_mut()
-            .for_each(|x| *x = (*x + 1.) / 2. * frame_buffer.ncols() as f32);
+            .for_each(|x| *x = (*x + 1.) / 2. * frame_buffer.ncols() as f64);
         p.column_mut(1)
             .iter_mut()
-            .for_each(|y| *y = (*y + 1.) / 2. * frame_buffer.nrows() as f32);
+            .for_each(|y| *y = (*y + 1.) / 2. * frame_buffer.nrows() as f64);
 
         let lx = p.column(0).min().floor() as usize;
         let ly = p.column(1).min().floor() as usize;
@@ -155,7 +155,7 @@ pub fn rasterize(
 
         for i in lx..=ux {
             for j in ly..=uy {
-                let pixel = nalgebra::Vector3::new(i as f32 + 0.5, j as f32 + 0.5, 1.);
+                let pixel = nalgebra::Vector3::new(i as f64 + 0.5, j as f64 + 0.5, 1.);
                 let bary_coords = matrix_A_inv * pixel;
                 // println!("pixel: {:.4}, {:.4}, {:.4}", pixel.x, pixel.y, pixel.z);
                 println!(
@@ -193,7 +193,7 @@ pub fn rasterize(
     }
 }
 
-fn vertex_interpolation(triangle: &ShaderTriangle, bary_coords: nalgebra::Vector3<f32>) -> Vertex {
+fn vertex_interpolation(triangle: &ShaderTriangle, bary_coords: nalgebra::Vector3<f64>) -> Vertex {
     let vertex = Vertex {
         position: triangle.v0.position * bary_coords.x
             + triangle.v1.position * bary_coords.y
@@ -207,18 +207,18 @@ fn vertex_interpolation(triangle: &ShaderTriangle, bary_coords: nalgebra::Vector
 
 // this should store some globals that the shader can access
 pub struct Uniform {
-    camera_pos: Vector3<f32>,
-    ambient_color: Vector3<f32>,
-    light_pos: Vector3<f32>,
-    light_color: Vector3<f32>,
+    camera_pos: Vector3<f64>,
+    ambient_color: Vector3<f64>,
+    light_pos: Vector3<f64>,
+    light_color: Vector3<f64>,
 }
 
 impl Uniform {
     pub fn new(
-        camera_pos: Vector3<f32>,
-        ambient_color: Vector3<f32>,
-        light_pos: Vector3<f32>,
-        light_color: Vector3<f32>,
+        camera_pos: Vector3<f64>,
+        ambient_color: Vector3<f64>,
+        light_pos: Vector3<f64>,
+        light_color: Vector3<f64>,
     ) -> Self {
         Self {
             camera_pos,
@@ -241,19 +241,19 @@ pub struct ShaderTriangle {
 
 #[derive(Debug)]
 pub struct Vertex {
-    pub position: nalgebra::Vector3<f32>,
-    pub normal: nalgebra::Vector3<f32>,
+    pub position: nalgebra::Vector3<f64>,
+    pub normal: nalgebra::Vector3<f64>,
 }
 
 pub struct Fragment {
-    pub position: nalgebra::Vector3<f32>,
-    pub color: nalgebra::Vector3<f32>,
+    pub position: nalgebra::Vector3<f64>,
+    pub color: nalgebra::Vector3<f64>,
 }
 
 pub struct Program {
     pub vertex_shader: fn(vertex: &Vertex, uniform: &Uniform) -> Vertex,
     pub fragment_shader: fn(vertex: &Vertex, uniform: &Uniform) -> Fragment,
-    pub blending_shader: fn(&Fragment, Vector4<f32>, f32) -> (Vector4<f32>, f32),
+    pub blending_shader: fn(&Fragment, Vector4<f64>, f64) -> (Vector4<f64>, f64),
 }
 
 // not sure where to initialize this, or make it default
@@ -261,7 +261,7 @@ impl Program {
     pub fn new(
         vertex_shader: fn(&Vertex, &Uniform) -> Vertex,
         fragment_shader: fn(&Vertex, &Uniform) -> Fragment,
-        blending_shader: fn(&Fragment, Vector4<f32>, f32) -> (Vector4<f32>, f32),
+        blending_shader: fn(&Fragment, Vector4<f64>, f64) -> (Vector4<f64>, f64),
     ) -> Program {
         Program {
             vertex_shader,
@@ -300,9 +300,9 @@ pub fn fragment_shader(vertex: &Vertex, uniform: &Uniform) -> Fragment {
 
 pub fn blending_shader(
     fragment: &Fragment,
-    old_color: Vector4<f32>,
-    old_z: f32,
-) -> (Vector4<f32>, f32) {
+    old_color: Vector4<f64>,
+    old_z: f64,
+) -> (Vector4<f64>, f64) {
     let color = Vector4::new(fragment.color.x, fragment.color.y, fragment.color.z, 1.);
     let z = fragment.position.z;
     if z > old_z {
