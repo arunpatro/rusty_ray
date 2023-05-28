@@ -126,9 +126,6 @@ fn bvh_task() {
 }
 
 fn raster_task() {
-    // objects are now only meshes because they need to have the triangles property which other
-    // let objects: Vec<composites::Mesh> = vec![composites::Mesh::from_off_file("data/bunny.off")];
-    // let mesh = composites::Mesh::from_off_file("data/test2.off");
     // let mesh = composites::Mesh::from_off_file("data/bunny.off");
     let mesh = composites::Mesh::from_off_file("data/dragon.off");
 
