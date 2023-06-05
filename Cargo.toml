@@ -6,9 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-nalgebra = "0.32.1"
-image = "0.24.5"
-kdam = "0.3.0"
+nalgebra = "0.32.2"
+image = "0.24.6"
 
 [profile.release]
-debug = true
